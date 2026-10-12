@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom breakpoint: sidebar collapses below this (matches design) */
+  --breakpoint-shell: 860px;
+
+  /* Fonts (wired from next/font in layout.tsx) */
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Surfaces */
+  --color-page: #f6f6f3;
+  --color-card: #ffffff;
+  --color-hover: #fafaf8;
+  --color-border: #e6e6e1;
+  --color-border-strong: #dadad4;
+  --color-hairline: #eeeeea;
+  --color-row: #f0f0ec;
+  --color-rowline: #f3f3ef;
+  --color-track: #f0f0ec;
+  --color-dashed: #b9b9b1;
+
+  /* Text */
+  --color-ink: #16181d;
+  --color-ink2: #262a33;
+  --color-sub: #3d4250;
+  --color-muted: #5b6070;
+  --color-muted2: #4a4f5c;
+
+  /* Brand */
+  --color-brand: #1e4cc2;
+  --color-brand-hover: #163a94;
+  --color-brand-soft: #eef2fc;
+  --color-brand-soft2: #f3f6fd;
+  --color-brand-bar-soft: #b9c7ee;
+
+  /* Status */
+  --color-good: #1e8a4c;
+  --color-good-bg: #e3f3e9;
+  --color-good-fg: #135f30;
+  --color-warn-bg: #fff1dc;
+  --color-warn-fg: #8a4205;
+  --color-warn-bar: #c46a0a;
+  --color-bad-bg: #fce8e6;
+  --color-bad-fg: #9e1c16;
+  --color-bad-bar: #c0332b;
+
+  /* Agent accents */
+  --color-nora-bg: #eef2fc;
+  --color-nora-fg: #1e4cc2;
+  --color-bob-bg: #f1ede4;
+  --color-bob-fg: #6b4a12;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: var(--color-brand);
+}
+a:hover {
+  color: var(--color-brand-hover);
+}
