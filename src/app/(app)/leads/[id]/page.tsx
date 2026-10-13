@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { ChevronLeftIcon, CheckIcon, PlayIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LeadLifecycle } from "@/components/LeadLifecycle";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { leadFields, qualificationChecks, transcript, waveform } from "@/lib/data";
+import { StatusBadge } from "@/components/ui/Badge";
+import {
+  leads,
+  leadFields,
+  qualificationChecks,
+  transcript,
+  waveform,
+} from "@/lib/data";
 
 const callInfo = [
   { k: "Called number", v: "+1 (888) 555-0140", mono: true },
@@ -12,7 +20,18 @@ const callInfo = [
   { k: "Saved to", v: "supabase.leads", mono: true },
 ];
 
-export default function LeadDetailPage() {
+export default async function LeadDetailPage({
+  params,
+}: PageProps<"/leads/[id]">) {
+  const { id } = await params;
+  const lead = leads.find((l) => l.id === id) ?? leads[0];
+  const initials = lead.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <>
       <Link
@@ -27,22 +46,27 @@ export default function LeadDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-nora-bg text-xl font-semibold text-nora-fg">
-            LC
+            {initials}
           </div>
           <div className="flex flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-[26px] font-semibold tracking-[-0.02em]">
-                Linda Carter
+                {lead.name}
               </h1>
-              <Badge className="bg-good-bg text-good-fg">Real lead</Badge>
+              <StatusBadge
+                status={lead.status}
+                label={lead.status === "Real" ? "Real lead" : lead.status}
+              />
             </div>
             <div className="text-sm text-muted">
-              Inbound call · Today, 2:41 PM · 1m 18s · Answered by Nora on the main
-              line
+              Inbound call · {lead.when} · {lead.dur} · Answered by {lead.agent}
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="hidden shell:inline-flex">
+            <ThemeToggle compact />
+          </span>
           <Button variant="danger" size="lg">
             Mark as spam
           </Button>
@@ -57,12 +81,17 @@ export default function LeadDetailPage() {
       <div className="grid items-start gap-5 [grid-template-columns:repeat(auto-fit,minmax(360px,1fr))]">
         {/* Left column */}
         <div className="flex flex-col gap-5">
+          {/* Lifecycle (stage + owner) */}
+          <LeadLifecycle id={lead.id} />
+
           {/* AI verdict */}
           <section className="flex flex-col gap-3.5 card p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">AI verdict</h2>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-[28px] font-semibold">87</span>
+                <span className="font-mono text-[28px] font-semibold">
+                  {lead.score}
+                </span>
                 <span className="text-[13px] text-muted">/ 100</span>
               </div>
             </div>
@@ -162,8 +191,9 @@ export default function LeadDetailPage() {
               >
                 <span className="pt-0.5 font-mono text-xs text-muted">{t}</span>
                 <span
-                  className="pt-px text-[13px] font-semibold"
-                  style={{ color: who === "agent" ? "#1E4CC2" : "#16181D" }}
+                  className={`pt-px text-[13px] font-semibold ${
+                    who === "agent" ? "text-brand" : "text-ink"
+                  }`}
                 >
                   {who === "agent" ? "Nora" : "Caller"}
                 </span>

@@ -1,0 +1,78 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { leads as baseLeads, type Lead, type Stage } from "./data";
+
+type Lifecycle = { stage: Stage; assigneeId: string | null };
+type LifecycleMap = Record<string, Lifecycle>;
+
+const STORAGE_KEY = "mhq-pipeline-v1";
+
+const seed: LifecycleMap = Object.fromEntries(
+  baseLeads.map((l) => [l.id, { stage: l.stage, assigneeId: l.assigneeId }]),
+);
+
+type Store = {
+  leads: Lead[];
+  setStage: (id: string, stage: Stage) => void;
+  setAssignee: (id: string, assigneeId: string | null) => void;
+};
+
+const LeadsContext = createContext<Store | null>(null);
+
+export function LeadsStoreProvider({ children }: { children: React.ReactNode }) {
+  // Deterministic seed on first render (server + client match), then rehydrate
+  // any saved changes from localStorage after mount.
+  const [overrides, setOverrides] = useState<LifecycleMap>(seed);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) setOverrides((prev) => ({ ...prev, ...JSON.parse(raw) }));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    } catch {}
+  }, [overrides]);
+
+  const setStage = useCallback((id: string, stage: Stage) => {
+    setOverrides((p) => ({ ...p, [id]: { ...p[id], stage } }));
+  }, []);
+
+  const setAssignee = useCallback((id: string, assigneeId: string | null) => {
+    setOverrides((p) => ({ ...p, [id]: { ...p[id], assigneeId } }));
+  }, []);
+
+  const leads = useMemo(
+    () => baseLeads.map((l) => ({ ...l, ...overrides[l.id] })),
+    [overrides],
+  );
+
+  const value = useMemo<Store>(
+    () => ({ leads, setStage, setAssignee }),
+    [leads, setStage, setAssignee],
+  );
+
+  return <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>;
+}
+
+export function useLeads(): Store {
+  const ctx = useContext(LeadsContext);
+  if (!ctx) throw new Error("useLeads must be used within LeadsStoreProvider");
+  return ctx;
+}
+
+export function useLead(id: string): Lead | undefined {
+  const { leads } = useLeads();
+  return leads.find((l) => l.id === id);
+}

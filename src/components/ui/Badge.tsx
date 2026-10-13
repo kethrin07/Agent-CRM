@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { statusStyle, type Status } from "@/lib/data";
+import { stageMeta, statusStyle, type Stage, type Status } from "@/lib/data";
 
 export function Badge({
   children,
@@ -30,5 +30,18 @@ export function StatusBadge({
   const s = statusStyle[status];
   return (
     <Badge style={{ background: s.bg, color: s.fg }}>{label ?? status}</Badge>
+  );
+}
+
+export function StageBadge({ stage }: { stage: Stage }) {
+  const s = stageMeta[stage];
+  return (
+    <Badge className="gap-1.5" style={{ background: s.bg, color: s.fg }}>
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ background: s.dot }}
+      />
+      {s.label}
+    </Badge>
   );
 }

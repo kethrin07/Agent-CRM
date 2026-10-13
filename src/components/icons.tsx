@@ -53,6 +53,17 @@ export function UsersIcon({ size = 18, ...props }: IconProps) {
   );
 }
 
+export function KanbanIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M8 7v7" />
+      <path d="M12 7v4" />
+      <path d="M16 7v10" />
+    </svg>
+  );
+}
+
 export function MicIcon({ size = 18, ...props }: IconProps) {
   return (
     <svg {...base(size, 1.8, props)}>
@@ -143,6 +154,30 @@ export function TrendIcon({
           <path d="M17 8v9H8" />
         </>
       )}
+    </svg>
+  );
+}
+
+export function SunIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.9 4.9 1.4 1.4" />
+      <path d="m17.7 17.7 1.4 1.4" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.3 17.7-1.4 1.4" />
+      <path d="m19.1 4.9-1.4 1.4" />
+    </svg>
+  );
+}
+
+export function MoonIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
     </svg>
   );
 }

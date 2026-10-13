@@ -18,6 +18,46 @@ export const agentAccent: Record<string, { bg: string; fg: string }> = {
   Bob: { bg: "#F1EDE4", fg: "#6B4A12" },
 };
 
+/* ── Lead lifecycle (the human follow-up pipeline, after AI qualification) ── */
+
+export type Stage = "New" | "Contacted" | "Quoted" | "Won" | "Lost";
+
+export const stageOrder: Stage[] = [
+  "New",
+  "Contacted",
+  "Quoted",
+  "Won",
+  "Lost",
+];
+
+export const stageMeta: Record<
+  Stage,
+  { label: string; bg: string; fg: string; dot: string }
+> = {
+  New: { label: "New", bg: "#EEF1F6", fg: "#3D4250", dot: "#8A8F9C" },
+  Contacted: { label: "Contacted", bg: "#EEF2FC", fg: "#1E4CC2", dot: "#1E4CC2" },
+  Quoted: { label: "Quoted", bg: "#F3EEFC", fg: "#6B3FA0", dot: "#8A5CD1" },
+  Won: { label: "Won", bg: "#E3F3E9", fg: "#135F30", dot: "#1E8A4C" },
+  Lost: { label: "Lost", bg: "#FCE8E6", fg: "#9E1C16", dot: "#C0332B" },
+};
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  initial: string;
+  bg: string;
+  fg: string;
+};
+
+export const team: TeamMember[] = [
+  { id: "maya", name: "Maya Chen", initial: "MC", bg: "#EEF2FC", fg: "#1E4CC2" },
+  { id: "devin", name: "Devin Ross", initial: "DR", bg: "#E9F3EC", fg: "#135F30" },
+  { id: "priya", name: "Priya Shah", initial: "PS", bg: "#F3EEFC", fg: "#6B3FA0" },
+];
+
+export const teamById = (id: string | null): TeamMember | null =>
+  id ? (team.find((m) => m.id === id) ?? null) : null;
+
 export const connections = [
   "ElevenLabs · connected",
   "Supabase · connected",
@@ -128,22 +168,24 @@ export type Lead = {
   dur: string;
   agent: "Nora" | "Bob";
   when: string;
+  stage: Stage;
+  assigneeId: string | null;
 };
 
 const slug = (name: string, i: number) =>
   name.toLowerCase().replace(/[^a-z]+/g, "-").replace(/(^-|-$)/g, "") || `lead-${i}`;
 
 export const leads: Lead[] = [
-  { name: "Linda Carter", phone: "+1 512 555 0182", status: "Real", score: 87, intent: "Policy renewing, price went up", dur: "1:18", agent: "Nora", when: "Today, 2:41 PM" },
-  { name: "Unknown caller", phone: "+1 213 555 0147", status: "Spam", score: 3, intent: "Robocall / silence", dur: "0:07", agent: "Bob", when: "Today, 2:22 PM" },
-  { name: "James Patel", phone: "+1 469 555 0193", status: "Real", score: 92, intent: "Buying a home, closing soon", dur: "3:05", agent: "Nora", when: "Today, 1:58 PM" },
-  { name: "Dale Cooper", phone: "+1 206 555 0110", status: "Unclear", score: 42, intent: "Asked about rates, hung up", dur: "0:47", agent: "Bob", when: "Today, 1:30 PM" },
-  { name: "Rosa Jimenez", phone: "+1 305 555 0166", status: "Real", score: 79, intent: "Switching from current insurer", dur: "2:36", agent: "Nora", when: "Today, 12:12 PM" },
-  { name: "Kevin Brooks", phone: "+1 617 555 0121", status: "Spam", score: 8, intent: "Selling roofing leads", dur: "0:31", agent: "Nora", when: "Today, 11:40 AM" },
-  { name: "Angela Wu", phone: "+1 415 555 0175", status: "Real", score: 83, intent: "Condo, needs HO-6 quote", dur: "2:58", agent: "Bob", when: "Today, 10:05 AM" },
-  { name: "Tom Reyes", phone: "+1 702 555 0139", status: "Unclear", score: 55, intent: "Renter, asked about home policy", dur: "0:52", agent: "Bob", when: "Yesterday, 11:47 PM" },
-  { name: "Hannah Scott", phone: "+1 312 555 0104", status: "Real", score: 88, intent: "Bundle home and auto", dur: "4:20", agent: "Nora", when: "Yesterday, 5:15 PM" },
-  { name: "Silent caller", phone: "+1 646 555 0158", status: "Spam", score: 2, intent: "No response on the line", dur: "0:05", agent: "Bob", when: "Yesterday, 9:02 PM" },
+  { name: "Linda Carter", phone: "+1 512 555 0182", status: "Real", score: 87, intent: "Policy renewing, price went up", dur: "1:18", agent: "Nora", when: "Today, 2:41 PM", stage: "Contacted", assigneeId: "maya" },
+  { name: "Unknown caller", phone: "+1 213 555 0147", status: "Spam", score: 3, intent: "Robocall / silence", dur: "0:07", agent: "Bob", when: "Today, 2:22 PM", stage: "New", assigneeId: null },
+  { name: "James Patel", phone: "+1 469 555 0193", status: "Real", score: 92, intent: "Buying a home, closing soon", dur: "3:05", agent: "Nora", when: "Today, 1:58 PM", stage: "Quoted", assigneeId: "devin" },
+  { name: "Dale Cooper", phone: "+1 206 555 0110", status: "Unclear", score: 42, intent: "Asked about rates, hung up", dur: "0:47", agent: "Bob", when: "Today, 1:30 PM", stage: "New", assigneeId: null },
+  { name: "Rosa Jimenez", phone: "+1 305 555 0166", status: "Real", score: 79, intent: "Switching from current insurer", dur: "2:36", agent: "Nora", when: "Today, 12:12 PM", stage: "Contacted", assigneeId: "priya" },
+  { name: "Kevin Brooks", phone: "+1 617 555 0121", status: "Spam", score: 8, intent: "Selling roofing leads", dur: "0:31", agent: "Nora", when: "Today, 11:40 AM", stage: "New", assigneeId: null },
+  { name: "Angela Wu", phone: "+1 415 555 0175", status: "Real", score: 83, intent: "Condo, needs HO-6 quote", dur: "2:58", agent: "Bob", when: "Today, 10:05 AM", stage: "New", assigneeId: "devin" },
+  { name: "Tom Reyes", phone: "+1 702 555 0139", status: "Unclear", score: 55, intent: "Renter, asked about home policy", dur: "0:52", agent: "Bob", when: "Yesterday, 11:47 PM", stage: "Lost", assigneeId: "priya" },
+  { name: "Hannah Scott", phone: "+1 312 555 0104", status: "Real", score: 88, intent: "Bundle home and auto", dur: "4:20", agent: "Nora", when: "Yesterday, 5:15 PM", stage: "Won", assigneeId: "maya" },
+  { name: "Silent caller", phone: "+1 646 555 0158", status: "Spam", score: 2, intent: "No response on the line", dur: "0:05", agent: "Bob", when: "Yesterday, 9:02 PM", stage: "New", assigneeId: null },
 ].map((r, i) => ({ id: slug(r.name, i), ...(r as Omit<Lead, "id">) }));
 
 export const recentCalls = leads.slice(0, 5);

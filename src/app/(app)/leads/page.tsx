@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SearchIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { ScoreBar } from "@/components/ui/ScoreBar";
@@ -67,7 +68,12 @@ export default function LeadsPage() {
             Supabase
           </div>
         </div>
-        <Button>Export CSV</Button>
+        <div className="flex items-center gap-2">
+          <span className="hidden shell:inline-flex">
+            <ThemeToggle compact />
+          </span>
+          <Button>Export CSV</Button>
+        </div>
       </div>
 
       {/* Filters */}

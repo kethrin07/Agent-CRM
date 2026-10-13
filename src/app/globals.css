@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Manual (class-based) dark mode instead of prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Custom breakpoint: sidebar collapses below this (matches design) */
   --breakpoint-shell: 860px;
@@ -52,22 +55,61 @@
   --color-bob-fg: #6b4a12;
 }
 
-html,
-body {
-  margin: 0;
+@layer base {
+  html,
+  body {
+    margin: 0;
+  }
+
+  body {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  a {
+    color: var(--color-brand);
+  }
+  a:hover {
+    color: var(--color-brand-hover);
+  }
 }
 
-body {
-  background: var(--color-page);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+/* ── Dark theme ──
+   Re-maps the color tokens so every color utility flips with no component
+   changes. Semantic status pills (Real/Unclear/Spam, badges) keep their
+   self-contained pastel bg + fg pairs on purpose. */
+:root {
+  color-scheme: light;
 }
 
-a {
-  color: var(--color-brand);
-}
-a:hover {
-  color: var(--color-brand-hover);
+html.dark {
+  color-scheme: dark;
+
+  --color-page: #121316;
+  --color-card: #1b1c20;
+  --color-hover: #24262b;
+  --color-border: #2b2d33;
+  --color-border-strong: #3a3c43;
+  --color-hairline: #26282d;
+  --color-row: #212329;
+  --color-rowline: #1f2126;
+  --color-track: #2d2f35;
+  --color-dash: #45474f;
+
+  --color-ink: #f3f3f1;
+  --color-ink2: #dddde0;
+  --color-sub: #c2c4ca;
+  --color-muted: #9b9ea6;
+  --color-muted2: #b4b7be;
+
+  --color-brand: #3a63d4;
+  --color-brand-hover: #4f76e0;
+  --color-brand-soft: #1d2a4a;
+  --color-brand-soft2: #1b2642;
+  --color-brand-bar-soft: #3b4f7d;
+
+  --color-good: #2fae63;
 }
 
 /* Elevated card surface: border + subtle shadow so cards lift off the paper bg */
@@ -106,5 +148,32 @@ textarea:focus-visible,
   }
   to {
     transform: translateX(0);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Shimmering placeholder block; callers set size + border-radius */
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-row) 25%,
+    var(--color-hover) 50%,
+    var(--color-row) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
   }
 }

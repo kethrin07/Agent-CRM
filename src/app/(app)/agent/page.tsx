@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PhoneIcon, PlayIcon, TrashIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -40,7 +41,10 @@ export default function AgentSettingsPage() {
             Inbound only · Changes sync to ElevenLabs when you publish
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <span className="hidden shell:inline-flex">
+            <ThemeToggle compact />
+          </span>
           <Button size="lg">
             <PhoneIcon />
             Test call with {cur.name}

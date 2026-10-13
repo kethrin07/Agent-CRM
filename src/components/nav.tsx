@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GridIcon, HomeIcon, MicIcon, UsersIcon } from "./icons";
+import { GridIcon, HomeIcon, KanbanIcon, MicIcon, UsersIcon } from "./icons";
 import { connections } from "@/lib/data";
 
 export const navItems = [
   { href: "/", label: "Overview", Icon: GridIcon },
   { href: "/leads", label: "Leads & calls", Icon: UsersIcon },
+  { href: "/pipeline", label: "Pipeline", Icon: KanbanIcon },
   { href: "/agent", label: "Agent settings", Icon: MicIcon },
 ] as const;
 
