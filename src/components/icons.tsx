@@ -106,6 +106,47 @@ export function TrashIcon({ size = 16, ...props }: IconProps) {
   );
 }
 
+export function MenuIcon({ size = 20, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 2, props)}>
+      <path d="M3 6h18" />
+      <path d="M3 12h18" />
+      <path d="M3 18h18" />
+    </svg>
+  );
+}
+
+export function CloseIcon({ size = 20, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 2, props)}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
+export function TrendIcon({
+  dir,
+  size = 13,
+  ...props
+}: IconProps & { dir: "up" | "down" }) {
+  return (
+    <svg {...base(size, 2.4, props)}>
+      {dir === "up" ? (
+        <>
+          <path d="M7 17 17 7" />
+          <path d="M8 7h9v9" />
+        </>
+      ) : (
+        <>
+          <path d="M7 7 17 17" />
+          <path d="M17 8v9H8" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export function PlayIcon({ size = 18, ...props }: IconProps) {
   return (
     <svg

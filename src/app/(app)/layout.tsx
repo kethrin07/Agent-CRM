@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Sidebar from "@/components/Sidebar";
+import MobileTopBar from "@/components/MobileTopBar";
 
 export default function AppLayout({
   children,
@@ -13,9 +14,14 @@ export default function AppLayout({
       >
         <Sidebar />
       </Suspense>
-      <main className="main flex min-w-0 flex-grow flex-col gap-6 box-border px-4 pb-10 pt-5 shell:px-10 shell:pb-12 shell:pt-7">
-        {children}
-      </main>
+      <div className="flex min-w-0 flex-grow flex-col">
+        <Suspense fallback={null}>
+          <MobileTopBar />
+        </Suspense>
+        <main className="main flex min-w-0 flex-grow flex-col gap-6 box-border px-4 pb-10 pt-6 shell:px-10 shell:pb-12 shell:pt-7">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

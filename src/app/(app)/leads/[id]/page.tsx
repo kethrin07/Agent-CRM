@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ChevronLeftIcon, CheckIcon, PlayIcon } from "@/components/icons";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { leadFields, qualificationChecks, transcript, waveform } from "@/lib/data";
 
 const callInfo = [
@@ -32,9 +34,7 @@ export default function LeadDetailPage() {
               <h1 className="text-[26px] font-semibold tracking-[-0.02em]">
                 Linda Carter
               </h1>
-              <span className="rounded-full bg-good-bg px-2.5 py-1 text-xs font-semibold text-good-fg">
-                Real lead
-              </span>
+              <Badge className="bg-good-bg text-good-fg">Real lead</Badge>
             </div>
             <div className="text-sm text-muted">
               Inbound call · Today, 2:41 PM · 1m 18s · Answered by Nora on the main
@@ -43,24 +43,13 @@ export default function LeadDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="min-h-11 rounded-lg border border-border-strong bg-card px-4 text-sm text-bad-fg"
-          >
+          <Button variant="danger" size="lg">
             Mark as spam
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-lg border border-border-strong bg-card px-4 text-sm text-ink"
-          >
-            Assign
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-lg bg-brand px-[18px] text-sm font-semibold text-white"
-          >
+          </Button>
+          <Button size="lg">Assign</Button>
+          <Button variant="primary" size="lg">
             Call back
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -69,7 +58,7 @@ export default function LeadDetailPage() {
         {/* Left column */}
         <div className="flex flex-col gap-5">
           {/* AI verdict */}
-          <section className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3.5 card p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">AI verdict</h2>
               <div className="flex items-baseline gap-1">
@@ -97,7 +86,7 @@ export default function LeadDetailPage() {
           </section>
 
           {/* Lead details */}
-          <section className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3.5 card p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Lead details</h2>
               <span className="text-xs text-muted">Collected by Nora</span>
@@ -115,7 +104,7 @@ export default function LeadDetailPage() {
           </section>
 
           {/* Call info */}
-          <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3 card p-5">
             <h2 className="text-base font-semibold">Call info</h2>
             <div className="flex flex-col gap-2.5 text-[13px]">
               {callInfo.map((row) => (
@@ -137,16 +126,11 @@ export default function LeadDetailPage() {
         </div>
 
         {/* Right column: recording & transcript */}
-        <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <section className="flex flex-col overflow-hidden card">
           <div className="flex flex-col gap-3.5 border-b border-hairline px-5 py-[18px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold">Recording &amp; transcript</h2>
-              <button
-                type="button"
-                className="min-h-9 rounded-lg border border-border-strong bg-card px-3 text-[13px] text-ink"
-              >
-                Copy transcript
-              </button>
+              <Button size="sm">Copy transcript</Button>
             </div>
             <div className="flex items-center gap-3.5">
               <button

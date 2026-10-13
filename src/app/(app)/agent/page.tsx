@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { PhoneIcon, PlayIcon, TrashIcon } from "@/components/icons";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import {
   agentConfigs,
   collectFields,
@@ -39,19 +41,13 @@ export default function AgentSettingsPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            type="button"
-            className="flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card px-4 text-sm text-ink"
-          >
+          <Button size="lg">
             <PhoneIcon />
             Test call with {cur.name}
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-lg bg-brand px-[18px] text-sm font-semibold text-white"
-          >
+          </Button>
+          <Button variant="primary" size="lg">
             Publish changes
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -67,8 +63,8 @@ export default function AgentSettingsPage() {
               role="tab"
               aria-selected={on}
               onClick={() => setAgent(name)}
-              className={`flex min-w-[240px] cursor-pointer items-center gap-3 rounded-xl bg-card py-2.5 pl-2.5 pr-4 text-left text-ink ${
-                on ? "border-2 border-brand" : "border border-border"
+              className={`flex min-w-[240px] cursor-pointer items-center gap-3 rounded-xl bg-card py-2.5 pl-2.5 pr-4 text-left text-ink shadow-sm transition-colors ${
+                on ? "border-2 border-brand" : "border border-border hover:bg-hover"
               }`}
             >
               <span
@@ -86,13 +82,12 @@ export default function AgentSettingsPage() {
             </button>
           );
         })}
-        <button
-          type="button"
-          className="min-h-[60px] rounded-xl border border-dashed bg-transparent px-4 text-sm text-sub"
-          style={{ borderColor: "#B9B9B1" }}
+        <Button
+          variant="dashed"
+          className="min-h-[60px] min-w-[120px] rounded-xl"
         >
           New agent
-        </button>
+        </Button>
       </div>
 
       {/* Two columns */}
@@ -100,7 +95,7 @@ export default function AgentSettingsPage() {
         {/* Left column */}
         <div className="flex flex-col gap-5">
           {/* Voice */}
-          <section className="flex flex-col gap-[18px] rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-[18px] card p-5">
             <div className="flex flex-col gap-1">
               <h2 className="text-base font-semibold">{cur.name}&apos;s voice</h2>
               <div className="text-[13px] text-muted">
@@ -161,7 +156,7 @@ export default function AgentSettingsPage() {
           </section>
 
           {/* Conversation */}
-          <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-4 card p-5">
             <h2 className="text-base font-semibold">Conversation</h2>
             <div className="grid grid-cols-2 gap-3.5">
               <label className="flex flex-col gap-1.5 text-[13px] font-medium">
@@ -201,7 +196,7 @@ export default function AgentSettingsPage() {
           </section>
 
           {/* Knowledge base */}
-          <section className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3.5 card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <h2 className="text-base font-semibold">Knowledge base</h2>
@@ -209,13 +204,9 @@ export default function AgentSettingsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {["Upload file", "Add URL", "Add text"].map((b) => (
-                  <button
-                    key={b}
-                    type="button"
-                    className="min-h-10 rounded-lg border border-border-strong bg-card px-3 text-[13px] text-ink"
-                  >
+                  <Button key={b} size="sm">
                     {b}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -234,13 +225,13 @@ export default function AgentSettingsPage() {
                     </span>
                     <span className="text-xs text-muted">{d.meta}</span>
                   </div>
-                  <span className="rounded-full bg-good-bg px-2 py-[3px] text-[11px] font-semibold text-good-fg">
+                  <Badge className="bg-good-bg px-2 py-[3px] text-[11px] text-good-fg">
                     Indexed
-                  </span>
+                  </Badge>
                   <button
                     type="button"
                     aria-label={`Remove ${d.name}`}
-                    className="flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted"
+                    className="flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted transition-colors hover:bg-hover hover:text-ink"
                   >
                     <TrashIcon />
                   </button>
@@ -253,7 +244,7 @@ export default function AgentSettingsPage() {
         {/* Right column */}
         <div className="flex flex-col gap-5">
           {/* Qualification rules */}
-          <section className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3.5 card p-5">
             <div className="flex flex-col gap-1">
               <h2 className="text-base font-semibold">Is it a real lead?</h2>
               <div className="text-[13px] text-muted">
@@ -280,17 +271,13 @@ export default function AgentSettingsPage() {
                 <option>Score is 70 or higher</option>
               </select>
             </label>
-            <button
-              type="button"
-              className="min-h-10 self-start rounded-lg border border-dashed bg-card px-3 text-[13px] text-ink"
-              style={{ borderColor: "#B9B9B1" }}
-            >
+            <Button variant="dashed" size="sm" className="self-start">
               Add rule
-            </button>
+            </Button>
           </section>
 
           {/* Details to collect */}
-          <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3 card p-5">
             <div className="flex flex-col gap-1">
               <h2 className="text-base font-semibold">Details to collect</h2>
               <div className="text-[13px] text-muted">Saved as columns on each lead</div>
@@ -306,17 +293,13 @@ export default function AgentSettingsPage() {
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              className="min-h-10 self-start rounded-lg border border-dashed bg-card px-3 text-[13px] text-ink"
-              style={{ borderColor: "#B9B9B1" }}
-            >
+            <Button variant="dashed" size="sm" className="self-start">
               Add field
-            </button>
+            </Button>
           </section>
 
           {/* Connections */}
-          <section className="flex flex-col gap-3.5 rounded-xl border border-border bg-card p-5">
+          <section className="flex flex-col gap-3.5 card p-5">
             <h2 className="text-base font-semibold">{cur.name}&apos;s connections</h2>
             <div className="flex flex-col gap-2.5 text-[13px]">
               <div className="flex justify-between gap-3">

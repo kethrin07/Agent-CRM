@@ -18,7 +18,7 @@
   --color-row: #f0f0ec;
   --color-rowline: #f3f3ef;
   --color-track: #f0f0ec;
-  --color-dashed: #b9b9b1;
+  --color-dash: #b9b9b1;
 
   /* Text */
   --color-ink: #16181d;
@@ -68,4 +68,43 @@ a {
 }
 a:hover {
   color: var(--color-brand-hover);
+}
+
+/* Elevated card surface: border + subtle shadow so cards lift off the paper bg */
+@utility card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 1px 2px rgb(22 24 29 / 0.05),
+    0 1px 2px rgb(22 24 29 / 0.025);
+}
+
+/* Visible keyboard focus for every interactive element */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }

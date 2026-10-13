@@ -3,6 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { SearchIcon } from "@/components/icons";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/Badge";
+import { ScoreBar } from "@/components/ui/ScoreBar";
 import {
   agentAccent,
   leads,
@@ -16,6 +19,13 @@ type AgentFilter = "All agents" | "Nora" | "Bob";
 
 const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
 const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob"];
+
+const chipClass = (on: boolean) =>
+  `min-h-10 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
+    on
+      ? "border-ink bg-ink text-white"
+      : "border-border-strong bg-card text-ink hover:bg-hover"
+  }`;
 
 export default function LeadsPage() {
   const [filter, setFilter] = useState<StatusFilter>("All");
@@ -57,17 +67,12 @@ export default function LeadsPage() {
             Supabase
           </div>
         </div>
-        <button
-          type="button"
-          className="min-h-10 rounded-lg border border-border-strong bg-card px-3.5 text-sm text-ink"
-        >
-          Export CSV
-        </button>
+        <Button>Export CSV</Button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex min-h-11 max-w-[360px] flex-grow items-center gap-2 rounded-lg border border-border-strong bg-card px-3 text-muted">
+        <label className="flex min-h-11 max-w-[360px] flex-grow items-center gap-2 rounded-lg border border-border-strong bg-card px-3 text-muted focus-within:border-brand">
           <SearchIcon />
           <span className="sr-only">Search leads</span>
           <input
@@ -84,24 +89,17 @@ export default function LeadsPage() {
           aria-label="Filter by status"
           className="flex flex-wrap gap-1.5"
         >
-          {statusFilters.map((f) => {
-            const on = f === filter;
-            return (
-              <button
-                key={f}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setFilter(f)}
-                className={`min-h-10 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium ${
-                  on
-                    ? "border-ink bg-ink text-white"
-                    : "border-border-strong bg-card text-ink"
-                }`}
-              >
-                {f} · {countFor(f)}
-              </button>
-            );
-          })}
+          {statusFilters.map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={f === filter}
+              onClick={() => setFilter(f)}
+              className={chipClass(f === filter)}
+            >
+              {f} · {countFor(f)}
+            </button>
+          ))}
         </div>
 
         <div
@@ -109,29 +107,22 @@ export default function LeadsPage() {
           aria-label="Filter by agent"
           className="flex flex-wrap gap-1.5 border-l border-border-strong pl-1.5"
         >
-          {agentFilters.map((a) => {
-            const on = a === agent;
-            return (
-              <button
-                key={a}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setAgent(a)}
-                className={`min-h-10 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium ${
-                  on
-                    ? "border-ink bg-ink text-white"
-                    : "border-border-strong bg-card text-ink"
-                }`}
-              >
-                {a}
-              </button>
-            );
-          })}
+          {agentFilters.map((a) => (
+            <button
+              key={a}
+              type="button"
+              aria-pressed={a === agent}
+              onClick={() => setAgent(a)}
+              className={chipClass(a === agent)}
+            >
+              {a}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Table */}
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <section className="card overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[960px]">
             <div className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]">
@@ -145,35 +136,19 @@ export default function LeadsPage() {
             </div>
 
             {rows.map((r) => {
-              const s = statusStyle[r.status];
               const accent = agentAccent[r.agent];
               return (
-                <div
+                <Link
                   key={r.id}
-                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]"
+                  href={`/leads/${r.id}`}
+                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]"
                 >
-                  <Link
-                    href={`/leads/${r.id}`}
-                    className="flex flex-col gap-0.5 text-ink no-underline hover:text-ink"
-                  >
+                  <span className="flex flex-col gap-0.5">
                     <span className="font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
-                  </Link>
-                  <span
-                    className="justify-self-start rounded-full px-2.5 py-1 text-xs font-semibold"
-                    style={{ background: s.bg, color: s.fg }}
-                  >
-                    {r.status}
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 font-mono font-medium">{r.score}</span>
-                    <div className="h-1.5 flex-grow rounded-[3px] bg-track">
-                      <div
-                        className="h-1.5 rounded-[3px]"
-                        style={{ width: `${r.score}%`, background: s.bar }}
-                      />
-                    </div>
-                  </div>
+                  <StatusBadge status={r.status} />
+                  <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
                   <span className="text-sub">{r.intent}</span>
                   <span className="font-mono text-sub">{r.dur}</span>
                   <span className="flex items-center gap-2 text-sub">
@@ -186,7 +161,7 @@ export default function LeadsPage() {
                     {r.agent}
                   </span>
                   <span className="text-muted">{r.when}</span>
-                </div>
+                </Link>
               );
             })}
 
@@ -203,18 +178,8 @@ export default function LeadsPage() {
             Showing {rows.length} of {totalCalls} calls
           </span>
           <div className="flex gap-2">
-            <button
-              type="button"
-              className="min-h-9 rounded-lg border border-border-strong bg-card px-3 text-[13px] text-ink"
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              className="min-h-9 rounded-lg border border-border-strong bg-card px-3 text-[13px] text-ink"
-            >
-              Next
-            </button>
+            <Button size="sm">Previous</Button>
+            <Button size="sm">Next</Button>
           </div>
         </div>
       </section>

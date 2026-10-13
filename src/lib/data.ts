@@ -26,15 +26,52 @@ export const connections = [
 
 /* ── Overview ── */
 
-export const kpis = [
-  { label: "Inbound calls", value: "1,042", sub: "+12% vs previous 7 days" },
-  { label: "Real leads", value: "418", sub: "40% of all calls" },
+export type Trend = {
+  dir: "up" | "down";
+  label: string;
+  tone: "pos" | "neg" | "neutral";
+};
+
+export const kpis: {
+  id: string;
+  label: string;
+  value: string;
+  trend: Trend;
+  sub: string;
+  spark: number[];
+}[] = [
   {
+    id: "inbound",
+    label: "Inbound calls",
+    value: "1,042",
+    trend: { dir: "up", label: "+12%", tone: "pos" },
+    sub: "vs previous 7 days",
+    spark: [133, 149, 153, 162, 165, 120, 150],
+  },
+  {
+    id: "real",
+    label: "Real leads",
+    value: "418",
+    trend: { dir: "up", label: "+6%", tone: "pos" },
+    sub: "40% of all calls",
+    spark: [52, 61, 58, 70, 66, 49, 62],
+  },
+  {
+    id: "spam",
     label: "Spam or junk",
     value: "287",
-    sub: "Filtered before reaching your team",
+    trend: { dir: "down", label: "-4%", tone: "pos" },
+    sub: "Filtered before your team",
+    spark: [46, 44, 52, 41, 48, 33, 39],
   },
-  { label: "Avg call length", value: "2m 48s", sub: "Real leads only: 3m 31s" },
+  {
+    id: "avg",
+    label: "Avg call length",
+    value: "2m 48s",
+    trend: { dir: "up", label: "+9s", tone: "neutral" },
+    sub: "Real leads only: 3m 31s",
+    spark: [150, 162, 158, 171, 168, 159, 168],
+  },
 ];
 
 // [day, realLeads, spam/unclear]

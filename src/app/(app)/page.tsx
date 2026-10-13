@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/Badge";
+import { Sparkline } from "@/components/ui/Sparkline";
+import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import {
   agentAccent,
   agentsSummary,
@@ -6,7 +10,6 @@ import {
   kpis,
   leadQuality,
   recentCalls,
-  statusStyle,
 } from "@/lib/data";
 
 export default function OverviewPage() {
@@ -21,15 +24,10 @@ export default function OverviewPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="min-h-10 rounded-lg border border-border-strong bg-card px-3.5 text-sm text-ink"
-          >
-            Last 7 days
-          </button>
+          <Button>Last 7 days</Button>
           <Link
             href="/agent"
-            className="flex min-h-10 items-center rounded-lg bg-brand px-4 text-sm font-semibold text-white no-underline hover:bg-brand-hover hover:text-white"
+            className="flex min-h-10 items-center rounded-lg bg-brand px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-hover hover:text-white"
           >
             Edit agents
           </Link>
@@ -40,11 +38,24 @@ export default function OverviewPage() {
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
         {kpis.map((k) => (
           <div
-            key={k.label}
-            className="flex flex-col gap-1.5 rounded-xl border border-border bg-card px-5 py-[18px]"
+            key={k.id}
+            className="card flex flex-col gap-3 overflow-hidden px-5 py-[18px]"
           >
-            <div className="text-[13px] text-muted">{k.label}</div>
-            <div className="text-[30px] font-semibold tracking-[-0.02em]">{k.value}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[13px] text-muted">{k.label}</div>
+              <TrendChip trend={k.trend} />
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <div className="text-[30px] font-semibold leading-none tracking-[-0.02em]">
+                {k.value}
+              </div>
+              <Sparkline
+                id={k.id}
+                points={k.spark}
+                color={sparkColor[k.trend.tone]}
+                className="h-8 w-[88px] flex-shrink-0"
+              />
+            </div>
             <div className="text-xs text-muted2">{k.sub}</div>
           </div>
         ))}
@@ -53,7 +64,7 @@ export default function OverviewPage() {
       {/* Chart + quality */}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
         {/* Calls per day */}
-        <section className="flex flex-col gap-[18px] rounded-xl border border-border bg-card p-5">
+        <section className="card flex flex-col gap-[18px] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold">Calls per day</h2>
             <div className="flex gap-3.5 text-xs text-muted2">
@@ -71,16 +82,19 @@ export default function OverviewPage() {
             {callsPerDay.map((d) => (
               <div
                 key={d.day}
-                className="flex h-full flex-grow basis-0 flex-col justify-end gap-0.5"
+                className="group flex h-full flex-grow basis-0 flex-col justify-end gap-0.5"
               >
                 <div className="text-center font-mono text-[11px] text-muted">
                   {d.total}
                 </div>
                 <div
-                  className="rounded-t bg-brand-bar-soft"
+                  className="rounded-t bg-brand-bar-soft transition-opacity group-hover:opacity-80"
                   style={{ height: d.otherH }}
                 />
-                <div className="bg-brand" style={{ height: d.realH }} />
+                <div
+                  className="bg-brand transition-opacity group-hover:opacity-90"
+                  style={{ height: d.realH }}
+                />
               </div>
             ))}
           </div>
@@ -97,7 +111,7 @@ export default function OverviewPage() {
         </section>
 
         {/* Lead quality */}
-        <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+        <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-semibold">Lead quality</h2>
           {leadQuality.map((q) => (
             <div key={q.label} className="flex flex-col gap-2">
@@ -124,7 +138,7 @@ export default function OverviewPage() {
                 <Link
                   key={a.name}
                   href="/agent"
-                  className="flex items-center gap-3 text-ink no-underline hover:text-ink"
+                  className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-1.5 text-ink no-underline transition-colors hover:bg-hover hover:text-ink"
                 >
                   <div
                     className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold"
@@ -152,7 +166,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Latest calls */}
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <section className="card overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
           <h2 className="text-base font-semibold">Latest calls</h2>
           <Link href="/leads" className="text-sm font-medium">
@@ -161,33 +175,23 @@ export default function OverviewPage() {
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
-            {recentCalls.map((r) => {
-              const s = statusStyle[r.status];
-              return (
-                <div
-                  key={r.id}
-                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm [grid-template-columns:minmax(180px,2fr)_110px_minmax(180px,2fr)_90px_70px_140px]"
-                >
-                  <Link
-                    href={`/leads/${r.id}`}
-                    className="flex flex-col gap-0.5 text-ink no-underline hover:text-ink"
-                  >
-                    <span className="font-semibold">{r.name}</span>
-                    <span className="font-mono text-xs text-muted">{r.phone}</span>
-                  </Link>
-                  <span
-                    className="justify-self-start rounded-full px-2.5 py-1 text-xs font-semibold"
-                    style={{ background: s.bg, color: s.fg }}
-                  >
-                    {r.status}
-                  </span>
-                  <span className="text-sub">{r.intent}</span>
-                  <span className="text-sub">{r.agent}</span>
-                  <span className="font-mono text-sub">{r.dur}</span>
-                  <span className="text-muted">{r.when}</span>
-                </div>
-              );
-            })}
+            {recentCalls.map((r) => (
+              <Link
+                key={r.id}
+                href={`/leads/${r.id}`}
+                className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink [grid-template-columns:minmax(180px,2fr)_110px_minmax(180px,2fr)_90px_70px_140px]"
+              >
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-semibold">{r.name}</span>
+                  <span className="font-mono text-xs text-muted">{r.phone}</span>
+                </span>
+                <StatusBadge status={r.status} />
+                <span className="text-sub">{r.intent}</span>
+                <span className="text-sub">{r.agent}</span>
+                <span className="font-mono text-sub">{r.dur}</span>
+                <span className="text-muted">{r.when}</span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
