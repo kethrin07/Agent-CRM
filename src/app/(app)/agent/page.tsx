@@ -5,6 +5,7 @@ import { PhoneIcon, PlayIcon, TrashIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/components/ui/Toast";
 import {
   agentConfigs,
   collectFields,
@@ -23,11 +24,25 @@ const sliders = [
 ];
 
 export default function AgentSettingsPage() {
+  const toast = useToast();
   const [agent, setAgent] = useState<AgentName>("Nora");
   const [voice, setVoice] = useState<Record<AgentName, string>>(defaultVoice);
+  const [kb, setKb] = useState(knowledgeBase);
 
   const cur = agentConfigs[agent];
   const picked = voice[agent];
+
+  const removeDoc = (name: string) => {
+    const prev = kb;
+    setKb((docs) => docs.filter((d) => d.name !== name));
+    toast(`Removed “${name}”`, {
+      variant: "info",
+      action: { label: "Undo", onClick: () => setKb(prev) },
+    });
+  };
+
+  const notWired = (what: string) =>
+    toast(`Connect ElevenLabs to ${what}`, { variant: "info" });
 
   return (
     <>
@@ -45,11 +60,20 @@ export default function AgentSettingsPage() {
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
-          <Button size="lg">
+          <Button
+            size="lg"
+            onClick={() =>
+              toast(`Starting a test call with ${cur.name}…`, { variant: "info" })
+            }
+          >
             <PhoneIcon />
             Test call with {cur.name}
           </Button>
-          <Button variant="primary" size="lg">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => toast(`Published ${cur.name}’s changes to ElevenLabs`)}
+          >
             Publish changes
           </Button>
         </div>
@@ -89,6 +113,7 @@ export default function AgentSettingsPage() {
         <Button
           variant="dashed"
           className="min-h-[60px] min-w-[120px] rounded-xl"
+          onClick={() => notWired("add more agents")}
         >
           New agent
         </Button>
@@ -121,7 +146,10 @@ export default function AgentSettingsPage() {
                     <button
                       type="button"
                       aria-label={`Play sample of ${v.name}`}
-                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-brand"
+                      onClick={() =>
+                        toast(`Playing a sample of ${v.name}`, { variant: "info" })
+                      }
+                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-border-strong bg-card text-brand transition-colors hover:bg-hover"
                     >
                       <PlayIcon size={14} />
                     </button>
@@ -208,14 +236,18 @@ export default function AgentSettingsPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {["Upload file", "Add URL", "Add text"].map((b) => (
-                  <Button key={b} size="sm">
+                  <Button
+                    key={b}
+                    size="sm"
+                    onClick={() => notWired("manage the knowledge base")}
+                  >
                     {b}
                   </Button>
                 ))}
               </div>
             </div>
             <div className="flex flex-col overflow-hidden rounded-[10px] border border-hairline">
-              {knowledgeBase.map((d) => (
+              {kb.map((d) => (
                 <div
                   key={d.name}
                   className="flex items-center gap-3 border-b border-row px-3.5 py-3 last:border-b-0"
@@ -235,6 +267,7 @@ export default function AgentSettingsPage() {
                   <button
                     type="button"
                     aria-label={`Remove ${d.name}`}
+                    onClick={() => removeDoc(d.name)}
                     className="flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-muted transition-colors hover:bg-hover hover:text-ink"
                   >
                     <TrashIcon />
@@ -275,7 +308,12 @@ export default function AgentSettingsPage() {
                 <option>Score is 70 or higher</option>
               </select>
             </label>
-            <Button variant="dashed" size="sm" className="self-start">
+            <Button
+              variant="dashed"
+              size="sm"
+              className="self-start"
+              onClick={() => notWired("customize qualification rules")}
+            >
               Add rule
             </Button>
           </section>
@@ -297,7 +335,12 @@ export default function AgentSettingsPage() {
                 </div>
               ))}
             </div>
-            <Button variant="dashed" size="sm" className="self-start">
+            <Button
+              variant="dashed"
+              size="sm"
+              className="self-start"
+              onClick={() => notWired("customize collected fields")}
+            >
               Add field
             </Button>
           </section>

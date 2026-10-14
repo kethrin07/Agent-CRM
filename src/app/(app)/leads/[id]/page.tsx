@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeftIcon, CheckIcon, PlayIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LeadLifecycle } from "@/components/LeadLifecycle";
-import { Button } from "@/components/ui/Button";
+import { LeadActions, CopyTranscriptButton } from "@/components/LeadActions";
 import { StatusBadge } from "@/components/ui/Badge";
 import {
   leads,
@@ -31,6 +31,10 @@ export default async function LeadDetailPage({
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  const transcriptText = transcript
+    .map(([t, who, txt]) => `${t}  ${who === "agent" ? "Nora" : "Caller"}: ${txt}`)
+    .join("\n");
 
   return (
     <>
@@ -67,13 +71,7 @@ export default async function LeadDetailPage({
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
-          <Button variant="danger" size="lg">
-            Mark as spam
-          </Button>
-          <Button size="lg">Assign</Button>
-          <Button variant="primary" size="lg">
-            Call back
-          </Button>
+          <LeadActions id={lead.id} />
         </div>
       </div>
 
@@ -159,7 +157,7 @@ export default async function LeadDetailPage({
           <div className="flex flex-col gap-3.5 border-b border-hairline px-5 py-[18px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold">Recording &amp; transcript</h2>
-              <Button size="sm">Copy transcript</Button>
+              <CopyTranscriptButton text={transcriptText} />
             </div>
             <div className="flex items-center gap-3.5">
               <button

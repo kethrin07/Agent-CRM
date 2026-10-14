@@ -7,11 +7,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { ScoreBar } from "@/components/ui/ScoreBar";
+import { useToast } from "@/components/ui/Toast";
+import { useLeads } from "@/lib/leads-store";
 import {
   agentAccent,
-  leads,
   statusStyle,
+  teamById,
   totalCalls,
+  type Lead,
   type Status,
 } from "@/lib/data";
 
@@ -29,14 +32,56 @@ const chipClass = (on: boolean) =>
   }`;
 
 export default function LeadsPage() {
+  const { leads } = useLeads();
+  const toast = useToast();
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [agent, setAgent] = useState<AgentFilter>("All agents");
   const [query, setQuery] = useState("");
 
   const byAgent = useMemo(
     () => (agent === "All agents" ? leads : leads.filter((l) => l.agent === agent)),
-    [agent],
+    [agent, leads],
   );
+
+  const exportCsv = () => {
+    const headers = [
+      "Name",
+      "Phone",
+      "Status",
+      "AI score",
+      "Intent",
+      "Length",
+      "Agent",
+      "Stage",
+      "Owner",
+      "Date",
+    ];
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = rows.map((r: Lead) =>
+      [
+        r.name,
+        r.phone,
+        r.status,
+        r.score,
+        r.intent,
+        r.dur,
+        r.agent,
+        r.stage,
+        teamById(r.assigneeId)?.name ?? "Unassigned",
+        r.when,
+      ]
+        .map(esc)
+        .join(","),
+    );
+    const csv = [headers.map(esc).join(","), ...lines].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "myhomequote-leads.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Exported ${rows.length} lead${rows.length === 1 ? "" : "s"} to CSV`);
+  };
 
   const rows = useMemo(() => {
     let r = filter === "All" ? byAgent : byAgent.filter((l) => l.status === filter);
@@ -72,7 +117,7 @@ export default function LeadsPage() {
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
-          <Button>Export CSV</Button>
+          <Button onClick={exportCsv}>Export CSV</Button>
         </div>
       </div>
 
@@ -184,8 +229,20 @@ export default function LeadsPage() {
             Showing {rows.length} of {totalCalls} calls
           </span>
           <div className="flex gap-2">
-            <Button size="sm">Previous</Button>
-            <Button size="sm">Next</Button>
+            <Button
+              size="sm"
+              onClick={() => toast("You’re on the first page", { variant: "info" })}
+            >
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              onClick={() =>
+                toast("That’s all the leads for now", { variant: "info" })
+              }
+            >
+              Next
+            </Button>
           </div>
         </div>
       </section>

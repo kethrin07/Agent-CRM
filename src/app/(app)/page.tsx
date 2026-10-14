@@ -8,10 +8,14 @@ import {
   agentAccent,
   agentsSummary,
   callsPerDay,
+  funnel,
   kpis,
   leadQuality,
   recentCalls,
 } from "@/lib/data";
+
+const funnelTop = funnel[0].value;
+const winRate = Math.round((funnel[funnel.length - 1].value / funnelTop) * 100);
 
 export default function OverviewPage() {
   return (
@@ -64,6 +68,49 @@ export default function OverviewPage() {
           </div>
         ))}
       </div>
+
+      {/* Conversion funnel */}
+      <section className="card flex flex-col gap-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold">Conversion funnel</h2>
+            <div className="text-[13px] text-muted">
+              From inbound call to closed customer, last 7 days
+            </div>
+          </div>
+          <div className="text-[13px] text-muted">
+            Win rate{" "}
+            <span className="font-semibold text-ink">{winRate}%</span> of calls
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3.5">
+          {funnel.map((f, i) => {
+            const widthPct = (f.value / funnelTop) * 100;
+            const conv =
+              i === 0 ? null : Math.round((f.value / funnel[i - 1].value) * 100);
+            return (
+              <div key={f.label} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium">{f.label}</span>
+                  <span className="flex items-baseline gap-3">
+                    <span className="font-mono">{f.value.toLocaleString()}</span>
+                    <span className="w-16 text-right font-mono text-xs text-muted">
+                      {conv !== null ? `${conv}%` : ""}
+                    </span>
+                  </span>
+                </div>
+                <div className="h-2.5 rounded bg-track">
+                  <div
+                    className="h-2.5 rounded transition-all"
+                    style={{ width: `${widthPct}%`, background: f.color }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Chart + quality */}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">

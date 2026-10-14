@@ -10,9 +10,9 @@ const toneClass: Record<Tone, string> = {
 };
 
 export const sparkColor: Record<Tone, string> = {
-  pos: "#1E8A4C",
-  neg: "#C0332B",
-  neutral: "#8A8F9C",
+  pos: "var(--color-good)",
+  neg: "var(--color-bad-bar)",
+  neutral: "var(--color-neutral-dot)",
 };
 
 export function TrendChip({ trend }: { trend: Trend }) {

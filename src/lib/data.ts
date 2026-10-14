@@ -4,18 +4,31 @@
 
 export type Status = "Real" | "Unclear" | "Spam";
 
+// Colors reference CSS tokens (var(--…)) so they flip in dark mode.
 export const statusStyle: Record<
   Status,
   { bg: string; fg: string; bar: string }
 > = {
-  Real: { bg: "#E3F3E9", fg: "#135F30", bar: "#1E8A4C" },
-  Unclear: { bg: "#FFF1DC", fg: "#8A4205", bar: "#C46A0A" },
-  Spam: { bg: "#FCE8E6", fg: "#9E1C16", bar: "#C0332B" },
+  Real: {
+    bg: "var(--color-good-bg)",
+    fg: "var(--color-good-fg)",
+    bar: "var(--color-good)",
+  },
+  Unclear: {
+    bg: "var(--color-warn-bg)",
+    fg: "var(--color-warn-fg)",
+    bar: "var(--color-warn-bar)",
+  },
+  Spam: {
+    bg: "var(--color-bad-bg)",
+    fg: "var(--color-bad-fg)",
+    bar: "var(--color-bad-bar)",
+  },
 };
 
 export const agentAccent: Record<string, { bg: string; fg: string }> = {
-  Nora: { bg: "#EEF2FC", fg: "#1E4CC2" },
-  Bob: { bg: "#F1EDE4", fg: "#6B4A12" },
+  Nora: { bg: "var(--color-nora-bg)", fg: "var(--color-nora-fg)" },
+  Bob: { bg: "var(--color-bob-bg)", fg: "var(--color-bob-fg)" },
 };
 
 /* ── Lead lifecycle (the human follow-up pipeline, after AI qualification) ── */
@@ -34,11 +47,36 @@ export const stageMeta: Record<
   Stage,
   { label: string; bg: string; fg: string; dot: string }
 > = {
-  New: { label: "New", bg: "#EEF1F6", fg: "#3D4250", dot: "#8A8F9C" },
-  Contacted: { label: "Contacted", bg: "#EEF2FC", fg: "#1E4CC2", dot: "#1E4CC2" },
-  Quoted: { label: "Quoted", bg: "#F3EEFC", fg: "#6B3FA0", dot: "#8A5CD1" },
-  Won: { label: "Won", bg: "#E3F3E9", fg: "#135F30", dot: "#1E8A4C" },
-  Lost: { label: "Lost", bg: "#FCE8E6", fg: "#9E1C16", dot: "#C0332B" },
+  New: {
+    label: "New",
+    bg: "var(--color-neutral-bg)",
+    fg: "var(--color-neutral-fg)",
+    dot: "var(--color-neutral-dot)",
+  },
+  Contacted: {
+    label: "Contacted",
+    bg: "var(--color-nora-bg)",
+    fg: "var(--color-nora-fg)",
+    dot: "var(--color-nora-fg)",
+  },
+  Quoted: {
+    label: "Quoted",
+    bg: "var(--color-purple-bg)",
+    fg: "var(--color-purple-fg)",
+    dot: "var(--color-purple-dot)",
+  },
+  Won: {
+    label: "Won",
+    bg: "var(--color-good-bg)",
+    fg: "var(--color-good-fg)",
+    dot: "var(--color-good)",
+  },
+  Lost: {
+    label: "Lost",
+    bg: "var(--color-bad-bg)",
+    fg: "var(--color-bad-fg)",
+    dot: "var(--color-bad-bar)",
+  },
 };
 
 export type TeamMember = {
@@ -50,9 +88,9 @@ export type TeamMember = {
 };
 
 export const team: TeamMember[] = [
-  { id: "maya", name: "Maya Chen", initial: "MC", bg: "#EEF2FC", fg: "#1E4CC2" },
-  { id: "devin", name: "Devin Ross", initial: "DR", bg: "#E9F3EC", fg: "#135F30" },
-  { id: "priya", name: "Priya Shah", initial: "PS", bg: "#F3EEFC", fg: "#6B3FA0" },
+  { id: "maya", name: "Maya Chen", initial: "MC", bg: "var(--color-nora-bg)", fg: "var(--color-nora-fg)" },
+  { id: "devin", name: "Devin Ross", initial: "DR", bg: "var(--color-good-bg)", fg: "var(--color-good-fg)" },
+  { id: "priya", name: "Priya Shah", initial: "PS", bg: "var(--color-purple-bg)", fg: "var(--color-purple-fg)" },
 ];
 
 export const teamById = (id: string | null): TeamMember | null =>
@@ -114,6 +152,15 @@ export const kpis: {
   },
 ];
 
+// Conversion funnel: inbound call → closed customer (aggregate, last 7 days)
+export const funnel: { label: string; value: number; color: string }[] = [
+  { label: "Inbound calls", value: 1042, color: "var(--color-neutral-dot)" },
+  { label: "Real leads", value: 418, color: "var(--color-brand-bar-soft)" },
+  { label: "Contacted", value: 356, color: "var(--color-brand)" },
+  { label: "Quoted", value: 214, color: "var(--color-purple-dot)" },
+  { label: "Won", value: 103, color: "var(--color-good)" },
+];
+
 // [day, realLeads, spam/unclear]
 const callsRaw: [string, number, number][] = [
   ["Mon", 52, 81],
@@ -134,9 +181,9 @@ export const callsPerDay = callsRaw.map(([day, real, other]) => ({
 }));
 
 export const leadQuality = [
-  { label: "Real lead", count: 418, pct: 40, color: "#1E8A4C" },
-  { label: "Unclear", count: 337, pct: 32, color: "#C46A0A" },
-  { label: "Spam", count: 287, pct: 28, color: "#C0332B" },
+  { label: "Real lead", count: 418, pct: 40, color: "var(--color-good)" },
+  { label: "Unclear", count: 337, pct: 32, color: "var(--color-warn-bar)" },
+  { label: "Spam", count: 287, pct: 28, color: "var(--color-bad-bar)" },
 ];
 
 export const agentsSummary = [
@@ -216,7 +263,7 @@ export const transcript: [string, "agent" | "caller", string][] = [
 
 export const waveform = Array.from({ length: 64 }, (_, i) => ({
   h: 8 + Math.round(Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.45)) * 28),
-  color: i < 18 ? "#1E4CC2" : "#C9D3EE",
+  color: i < 18 ? "var(--color-brand)" : "var(--color-brand-bar-soft)",
 }));
 
 export const qualificationChecks = [

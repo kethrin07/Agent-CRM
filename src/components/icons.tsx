@@ -158,6 +158,26 @@ export function TrendIcon({
   );
 }
 
+export function InfoIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+export function AlertIcon({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
 export function SunIcon({ size = 18, ...props }: IconProps) {
   return (
     <svg {...base(size, 1.8, props)}>

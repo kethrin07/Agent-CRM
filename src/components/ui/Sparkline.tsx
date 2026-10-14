@@ -38,15 +38,15 @@ export function Sparkline({
     >
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: color }} stopOpacity="0.2" />
+          <stop offset="100%" style={{ stopColor: color }} stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill={`url(#${gid})`} />
       <path
         d={line}
         fill="none"
-        stroke={color}
+        style={{ stroke: color }}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

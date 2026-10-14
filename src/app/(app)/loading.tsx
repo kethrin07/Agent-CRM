@@ -29,6 +29,17 @@ export default function Loading() {
         ))}
       </div>
 
+      {/* Conversion funnel */}
+      <div className="card flex flex-col gap-4 p-5">
+        <Skeleton className="h-5 w-40 rounded" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-full rounded" />
+            <Skeleton className="h-2.5 w-full rounded" />
+          </div>
+        ))}
+      </div>
+
       {/* Chart + quality */}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
         <div className="card flex flex-col gap-4 p-5">
