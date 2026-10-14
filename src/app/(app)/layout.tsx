@@ -13,7 +13,7 @@ export default function AppLayout({
         <div className="flex min-h-screen bg-page text-ink">
         <Suspense
           fallback={
-            <div className="hidden w-[232px] flex-shrink-0 border-r border-border bg-card shell:block" />
+            <div className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 self-start border-r border-border bg-card shell:block" />
           }
         >
           <Sidebar />

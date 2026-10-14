@@ -359,14 +359,15 @@ export const qualificationRules = [
   { label: "Home is in a ZIP code we serve", on: false },
 ];
 
+// Types mirror ElevenLabs data-collection schema types (String/Number/Integer/Boolean)
 export const collectFields = [
-  { key: "full_name", type: "text" },
-  { key: "email", type: "text" },
-  { key: "zip_code", type: "text" },
-  { key: "home_type", type: "text" },
-  { key: "is_owner", type: "yes / no" },
-  { key: "year_built", type: "number" },
-  { key: "home_value", type: "number" },
-  { key: "renewal_date", type: "text" },
-  { key: "best_time_to_call", type: "text" },
+  { key: "full_name", type: "String" },
+  { key: "email", type: "String" },
+  { key: "zip_code", type: "String" },
+  { key: "home_type", type: "String" },
+  { key: "is_owner", type: "Boolean" },
+  { key: "year_built", type: "Integer" },
+  { key: "home_value", type: "Number" },
+  { key: "renewal_date", type: "String" },
+  { key: "best_time_to_call", type: "String" },
 ];

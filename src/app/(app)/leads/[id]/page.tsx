@@ -12,11 +12,11 @@ import {
   waveform,
 } from "@/lib/data";
 
+// Fields mirror the ElevenLabs conversation payload (metadata + analysis)
 const callInfo = [
   { k: "Called number", v: "+1 (888) 555-0140", mono: true },
   { k: "Conversation ID", v: "conv_8f2a91c4e7", mono: true },
-  { k: "Sentiment", v: "Positive" },
-  { k: "Ended by", v: "Agent, goal reached" },
+  { k: "Call success", v: "Success" }, // analysis.call_successful
   { k: "Saved to", v: "supabase.leads", mono: true },
 ];
 

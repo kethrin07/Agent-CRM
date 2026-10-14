@@ -200,8 +200,14 @@ export default function AgentSettingsPage() {
               </label>
               <label className="flex flex-col gap-1.5 text-[13px] font-medium">
                 LLM
-                <select className="min-h-11 rounded-lg border border-border-strong bg-card px-2.5 text-sm font-normal text-ink">
-                  <option>[CHOOSE MODEL]</option>
+                <select
+                  defaultValue="GPT-4o mini"
+                  className="min-h-11 rounded-lg border border-border-strong bg-card px-2.5 text-sm font-normal text-ink"
+                >
+                  <option>GPT-4o mini</option>
+                  <option>GPT-4o</option>
+                  <option>Gemini 2.0 Flash</option>
+                  <option>Claude 3.5 Sonnet</option>
                 </select>
               </label>
             </div>
@@ -232,7 +238,9 @@ export default function AgentSettingsPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <h2 className="text-base font-semibold">Knowledge base</h2>
-                <div className="text-[13px] text-muted">Shared by Nora and Bob</div>
+                <div className="text-[13px] text-muted">
+                  Attached to {cur.name} · indexed for retrieval
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {["Upload file", "Add URL", "Add text"].map((b) => (
