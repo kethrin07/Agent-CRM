@@ -1,15 +1,11 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/Button";
+import { OverviewTopline } from "@/components/OverviewTopline";
 import { StatusBadge } from "@/components/ui/Badge";
-import { Sparkline } from "@/components/ui/Sparkline";
-import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import {
   agentAccent,
   agentsSummary,
   callsPerDay,
   funnel,
-  kpis,
   leadQuality,
   recentCalls,
 } from "@/lib/data";
@@ -20,54 +16,7 @@ const winRate = Math.round((funnel[funnel.length - 1].value / funnelTop) * 100);
 export default function OverviewPage() {
   return (
     <>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[26px] font-semibold tracking-[-0.02em]">Overview</h1>
-          <div className="text-sm text-muted">
-            How Nora and Bob handled inbound calls over the last 7 days
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden shell:inline-flex">
-            <ThemeToggle compact />
-          </span>
-          <Button>Last 7 days</Button>
-          <Link
-            href="/agent"
-            className="flex min-h-10 items-center rounded-lg bg-brand px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-brand-hover hover:text-white"
-          >
-            Edit agents
-          </Link>
-        </div>
-      </div>
-
-      {/* KPI cards */}
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
-        {kpis.map((k) => (
-          <div
-            key={k.id}
-            className="card flex flex-col gap-3 overflow-hidden px-5 py-[18px]"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-[13px] text-muted">{k.label}</div>
-              <TrendChip trend={k.trend} />
-            </div>
-            <div className="flex items-end justify-between gap-3">
-              <div className="text-[30px] font-semibold leading-none tracking-[-0.02em]">
-                {k.value}
-              </div>
-              <Sparkline
-                id={k.id}
-                points={k.spark}
-                color={sparkColor[k.trend.tone]}
-                className="h-8 w-[88px] flex-shrink-0"
-              />
-            </div>
-            <div className="text-xs text-muted2">{k.sub}</div>
-          </div>
-        ))}
-      </div>
+      <OverviewTopline />
 
       {/* Conversion funnel */}
       <section className="card flex flex-col gap-4 p-5">
@@ -75,7 +24,7 @@ export default function OverviewPage() {
           <div className="flex flex-col gap-1">
             <h2 className="text-base font-semibold">Conversion funnel</h2>
             <div className="text-[13px] text-muted">
-              From inbound call to closed customer, last 7 days
+              From inbound call to closed customer
             </div>
           </div>
           <div className="text-[13px] text-muted">

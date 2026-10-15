@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SearchIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -31,12 +31,32 @@ const chipClass = (on: boolean) =>
       : "border-border-strong bg-card text-ink hover:bg-hover"
   }`;
 
+type SortKey = "name" | "status" | "score" | "dur" | "agent" | "when";
+type Sort = { key: SortKey; dir: "asc" | "desc" };
+
+const PAGE_SIZE = 6;
+const durToSec = (d: string) => {
+  const [m, s] = d.split(":").map(Number);
+  return (m || 0) * 60 + (s || 0);
+};
+// Numeric columns default to largest-first; text columns to A→Z.
+const defaultDir = (k: SortKey): "asc" | "desc" =>
+  k === "score" || k === "dur" || k === "when" ? "desc" : "asc";
+
 export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [agent, setAgent] = useState<AgentFilter>("All agents");
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<Sort>({ key: "when", dir: "desc" });
+  const [page, setPage] = useState(1);
+
+  // Recency rank from the source order (index 0 = most recent).
+  const orderIndex = useMemo(
+    () => new Map(leads.map((l, i) => [l.id, i])),
+    [leads],
+  );
 
   const byAgent = useMemo(
     () => (agent === "All agents" ? leads : leads.filter((l) => l.agent === agent)),
@@ -97,8 +117,62 @@ export default function LeadsPage() {
     return r;
   }, [byAgent, filter, query]);
 
+  const sorted = useMemo(() => {
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const num = (l: Lead) =>
+      sort.key === "score"
+        ? l.score
+        : sort.key === "dur"
+          ? durToSec(l.dur)
+          : sort.key === "when"
+            ? -(orderIndex.get(l.id) ?? 0) // higher = more recent
+            : null;
+    return [...rows].sort((a, b) => {
+      const na = num(a);
+      if (na !== null) return (na - (num(b) as number)) * dir;
+      return (
+        String(a[sort.key]).localeCompare(String(b[sort.key])) * dir
+      );
+    });
+  }, [rows, sort, orderIndex]);
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const start = (page - 1) * PAGE_SIZE;
+  const paged = sorted.slice(start, start + PAGE_SIZE);
+
+  // Snap back to page 1 whenever the result set or ordering changes.
+  useEffect(() => {
+    setPage(1);
+  }, [filter, agent, query, sort]);
+
+  const toggleSort = (key: SortKey) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: defaultDir(key) },
+    );
+
   const countFor = (f: StatusFilter) =>
     f === "All" ? byAgent.length : byAgent.filter((l) => l.status === f).length;
+
+  const SortHeader = ({ label, k }: { label: string; k: SortKey }) => {
+    const active = sort.key === k;
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(k)}
+        aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+        className={`flex items-center gap-1 text-left uppercase transition-colors hover:text-ink ${
+          active ? "text-ink" : ""
+        }`}
+      >
+        {label}
+        <span className="text-[10px]">
+          {active ? (sort.dir === "asc" ? "↑" : "↓") : ""}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <>
@@ -177,16 +251,16 @@ export default function LeadsPage() {
         <div className="overflow-x-auto">
           <div className="min-w-[960px]">
             <div className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]">
-              <span>Lead</span>
-              <span>Status</span>
-              <span>AI score</span>
+              <SortHeader label="Lead" k="name" />
+              <SortHeader label="Status" k="status" />
+              <SortHeader label="AI score" k="score" />
               <span>What they want</span>
-              <span>Length</span>
-              <span>Agent</span>
-              <span>Date</span>
+              <SortHeader label="Length" k="dur" />
+              <SortHeader label="Agent" k="agent" />
+              <SortHeader label="Date" k="when" />
             </div>
 
-            {rows.map((r) => {
+            {paged.map((r) => {
               const accent = agentAccent[r.agent];
               return (
                 <Link
@@ -226,20 +300,28 @@ export default function LeadsPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 text-[13px] text-muted">
           <span>
-            Showing {rows.length} of {totalCalls} calls
+            {sorted.length === 0
+              ? "No results"
+              : `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, sorted.length)} of ${sorted.length}`}
+            {filter === "All" && agent === "All agents" && !query.trim()
+              ? ` · ${totalCalls} calls total`
+              : ""}
           </span>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="tabular-nums">
+              Page {page} / {pageCount}
+            </span>
             <Button
               size="sm"
-              onClick={() => toast("You’re on the first page", { variant: "info" })}
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               Previous
             </Button>
             <Button
               size="sm"
-              onClick={() =>
-                toast("That’s all the leads for now", { variant: "info" })
-              }
+              disabled={page >= pageCount}
+              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             >
               Next
             </Button>

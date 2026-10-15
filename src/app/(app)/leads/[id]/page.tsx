@@ -1,16 +1,12 @@
 import Link from "next/link";
-import { ChevronLeftIcon, CheckIcon, PlayIcon } from "@/components/icons";
+import { ChevronLeftIcon, CheckIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LeadLifecycle } from "@/components/LeadLifecycle";
+import { LeadNotes } from "@/components/LeadNotes";
 import { LeadActions, CopyTranscriptButton } from "@/components/LeadActions";
+import { RecordingPlayer } from "@/components/RecordingPlayer";
 import { StatusBadge } from "@/components/ui/Badge";
-import {
-  leads,
-  leadFields,
-  qualificationChecks,
-  transcript,
-  waveform,
-} from "@/lib/data";
+import { leads, leadFields, qualificationChecks, transcript } from "@/lib/data";
 
 // Fields mirror the ElevenLabs conversation payload (metadata + analysis)
 const callInfo = [
@@ -141,14 +137,7 @@ export default async function LeadDetailPage({
                 </div>
               ))}
             </div>
-            <label className="mt-1 flex flex-col gap-1.5 text-[13px] font-medium">
-              Your notes
-              <textarea
-                rows={3}
-                placeholder="Add a note for your team"
-                className="resize-y rounded-lg border border-border-strong px-3 py-2.5 text-sm font-normal outline-none"
-              />
-            </label>
+            <LeadNotes id={lead.id} />
           </section>
         </div>
 
@@ -159,27 +148,7 @@ export default async function LeadDetailPage({
               <h2 className="text-base font-semibold">Recording &amp; transcript</h2>
               <CopyTranscriptButton text={transcriptText} />
             </div>
-            <div className="flex items-center gap-3.5">
-              <button
-                type="button"
-                aria-label="Play recording"
-                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white"
-              >
-                <PlayIcon />
-              </button>
-              <div className="flex h-10 min-w-0 flex-grow items-center gap-0.5 overflow-hidden">
-                {waveform.map((w, i) => (
-                  <div
-                    key={i}
-                    className="min-w-0.5 flex-grow basis-0 rounded-sm"
-                    style={{ height: w.h, background: w.color }}
-                  />
-                ))}
-              </div>
-              <span className="flex-shrink-0 font-mono text-xs text-muted">
-                0:22 / 1:18
-              </span>
-            </div>
+            <RecordingPlayer />
           </div>
           <div className="flex flex-col px-5 pb-5 pt-2">
             {transcript.map(([t, who, text], i) => (

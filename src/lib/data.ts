@@ -110,47 +110,59 @@ export type Trend = {
   tone: "pos" | "neg" | "neutral";
 };
 
-export const kpis: {
+export type Kpi = {
   id: string;
   label: string;
   value: string;
   trend: Trend;
   sub: string;
   spark: number[];
-}[] = [
-  {
-    id: "inbound",
-    label: "Inbound calls",
-    value: "1,042",
-    trend: { dir: "up", label: "+12%", tone: "pos" },
-    sub: "vs previous 7 days",
-    spark: [133, 149, 153, 162, 165, 120, 150],
-  },
-  {
-    id: "real",
-    label: "Real leads",
-    value: "418",
-    trend: { dir: "up", label: "+6%", tone: "pos" },
-    sub: "40% of all calls",
-    spark: [52, 61, 58, 70, 66, 49, 62],
-  },
-  {
-    id: "spam",
-    label: "Spam or junk",
-    value: "287",
-    trend: { dir: "down", label: "-4%", tone: "pos" },
-    sub: "Filtered before your team",
-    spark: [46, 44, 52, 41, 48, 33, 39],
-  },
-  {
-    id: "avg",
-    label: "Avg call length",
-    value: "2m 48s",
-    trend: { dir: "up", label: "+9s", tone: "neutral" },
-    sub: "Real leads only: 3m 31s",
-    spark: [150, 162, 158, 171, 168, 159, 168],
-  },
+};
+
+export type RangeKey = "24h" | "7d" | "30d";
+
+export const rangeOptions: { key: RangeKey; label: string }[] = [
+  { key: "24h", label: "Last 24 hours" },
+  { key: "7d", label: "Last 7 days" },
+  { key: "30d", label: "Last 30 days" },
 ];
+
+export const rangeSubtitle: Record<RangeKey, string> = {
+  "24h": "over the last 24 hours",
+  "7d": "over the last 7 days",
+  "30d": "over the last 30 days",
+};
+
+const spark = {
+  inbound: [133, 149, 153, 162, 165, 120, 150],
+  real: [52, 61, 58, 70, 66, 49, 62],
+  spam: [46, 44, 52, 41, 48, 33, 39],
+  avg: [150, 162, 158, 171, 168, 159, 168],
+};
+
+export const kpisByRange: Record<RangeKey, Kpi[]> = {
+  "24h": [
+    { id: "inbound", label: "Inbound calls", value: "168", trend: { dir: "up", label: "+8%", tone: "pos" }, sub: "vs previous 24 hours", spark: spark.inbound },
+    { id: "real", label: "Real leads", value: "69", trend: { dir: "up", label: "+5%", tone: "pos" }, sub: "41% of all calls", spark: spark.real },
+    { id: "spam", label: "Spam or junk", value: "47", trend: { dir: "down", label: "-2%", tone: "pos" }, sub: "Filtered before your team", spark: spark.spam },
+    { id: "avg", label: "Avg call length", value: "2m 41s", trend: { dir: "up", label: "+4s", tone: "neutral" }, sub: "Real leads only: 3m 22s", spark: spark.avg },
+  ],
+  "7d": [
+    { id: "inbound", label: "Inbound calls", value: "1,042", trend: { dir: "up", label: "+12%", tone: "pos" }, sub: "vs previous 7 days", spark: spark.inbound },
+    { id: "real", label: "Real leads", value: "418", trend: { dir: "up", label: "+6%", tone: "pos" }, sub: "40% of all calls", spark: spark.real },
+    { id: "spam", label: "Spam or junk", value: "287", trend: { dir: "down", label: "-4%", tone: "pos" }, sub: "Filtered before your team", spark: spark.spam },
+    { id: "avg", label: "Avg call length", value: "2m 48s", trend: { dir: "up", label: "+9s", tone: "neutral" }, sub: "Real leads only: 3m 31s", spark: spark.avg },
+  ],
+  "30d": [
+    { id: "inbound", label: "Inbound calls", value: "4,310", trend: { dir: "up", label: "+15%", tone: "pos" }, sub: "vs previous 30 days", spark: spark.inbound },
+    { id: "real", label: "Real leads", value: "1,724", trend: { dir: "up", label: "+9%", tone: "pos" }, sub: "40% of all calls", spark: spark.real },
+    { id: "spam", label: "Spam or junk", value: "1,190", trend: { dir: "down", label: "-6%", tone: "pos" }, sub: "Filtered before your team", spark: spark.spam },
+    { id: "avg", label: "Avg call length", value: "2m 52s", trend: { dir: "up", label: "+12s", tone: "neutral" }, sub: "Real leads only: 3m 34s", spark: spark.avg },
+  ],
+};
+
+// Default range used by any non-interactive consumer (e.g. skeleton sizing).
+export const kpis = kpisByRange["7d"];
 
 // Conversion funnel: inbound call → closed customer (aggregate, last 7 days)
 export const funnel: { label: string; value: number; color: string }[] = [

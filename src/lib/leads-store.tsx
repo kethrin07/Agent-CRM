@@ -14,6 +14,7 @@ type Lifecycle = { stage: Stage; assigneeId: string | null };
 type LifecycleMap = Record<string, Lifecycle>;
 
 const STORAGE_KEY = "mhq-pipeline-v1";
+const NOTES_KEY = "mhq-notes-v1";
 
 const seed: LifecycleMap = Object.fromEntries(
   baseLeads.map((l) => [l.id, { stage: l.stage, assigneeId: l.assigneeId }]),
@@ -23,6 +24,8 @@ type Store = {
   leads: Lead[];
   setStage: (id: string, stage: Stage) => void;
   setAssignee: (id: string, assigneeId: string | null) => void;
+  notes: Record<string, string>;
+  setNote: (id: string, text: string) => void;
 };
 
 const LeadsContext = createContext<Store | null>(null);
@@ -31,19 +34,34 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   // Deterministic seed on first render (server + client match), then rehydrate
   // any saved changes from localStorage after mount.
   const [overrides, setOverrides] = useState<LifecycleMap>(seed);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  // Gate writes until after we've loaded from localStorage, otherwise the
+  // initial empty state would clobber saved data (esp. under dev StrictMode).
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setOverrides((prev) => ({ ...prev, ...JSON.parse(raw) }));
+      const rawNotes = localStorage.getItem(NOTES_KEY);
+      if (rawNotes) setNotes(JSON.parse(rawNotes));
     } catch {}
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
     } catch {}
-  }, [overrides]);
+  }, [overrides, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    } catch {}
+  }, [notes, hydrated]);
 
   const setStage = useCallback((id: string, stage: Stage) => {
     setOverrides((p) => ({ ...p, [id]: { ...p[id], stage } }));
@@ -53,14 +71,18 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     setOverrides((p) => ({ ...p, [id]: { ...p[id], assigneeId } }));
   }, []);
 
+  const setNote = useCallback((id: string, text: string) => {
+    setNotes((p) => ({ ...p, [id]: text }));
+  }, []);
+
   const leads = useMemo(
     () => baseLeads.map((l) => ({ ...l, ...overrides[l.id] })),
     [overrides],
   );
 
   const value = useMemo<Store>(
-    () => ({ leads, setStage, setAssignee }),
-    [leads, setStage, setAssignee],
+    () => ({ leads, setStage, setAssignee, notes, setNote }),
+    [leads, setStage, setAssignee, notes, setNote],
   );
 
   return <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>;
