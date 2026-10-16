@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import { LeadsStoreProvider } from "@/lib/leads-store";
+import { LeadDrawerProvider } from "@/components/LeadDrawer";
+import { CommandPalette } from "@/components/CommandPalette";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export default function AppLayout({
@@ -10,6 +12,8 @@ export default function AppLayout({
   return (
     <ToastProvider>
       <LeadsStoreProvider>
+        <LeadDrawerProvider>
+        <CommandPalette />
         <div className="flex min-h-screen bg-page text-ink">
         <Suspense
           fallback={
@@ -25,6 +29,7 @@ export default function AppLayout({
           </main>
           </div>
         </div>
+        </LeadDrawerProvider>
       </LeadsStoreProvider>
     </ToastProvider>
   );

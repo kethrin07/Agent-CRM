@@ -61,6 +61,9 @@ export function conversationToLead(conv: Conversation): Lead {
 
   const name = str("full_name") ?? "Unknown caller";
   const phone = conv.metadata.phone_call?.external_number ?? "";
+  const started = conv.metadata.start_time_unix_secs
+    ? new Date(conv.metadata.start_time_unix_secs * 1000)
+    : null;
 
   return {
     id: slug(name, conv.conversation_id),
@@ -74,9 +77,8 @@ export function conversationToLead(conv: Conversation): Lead {
       "",
     dur: formatDuration(conv.metadata.call_duration_secs),
     agent: agentName(conv.agent_id),
-    when: conv.metadata.start_time_unix_secs
-      ? new Date(conv.metadata.start_time_unix_secs * 1000).toLocaleString()
-      : "",
+    ts: started ? started.toISOString() : "",
+    when: started ? started.toLocaleString() : "",
     // New lead enters the pipeline unworked + unassigned.
     stage: "New",
     assigneeId: null,

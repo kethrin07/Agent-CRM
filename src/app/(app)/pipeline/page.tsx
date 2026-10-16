@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/Badge";
+import { useLeadDrawer } from "@/components/LeadDrawer";
 import { useLeads } from "@/lib/leads-store";
 import {
   stageMeta,
@@ -151,6 +152,7 @@ function PipelineCard({
   onStage: (stage: Stage) => void;
   onAssignee: (assigneeId: string | null) => void;
 }) {
+  const { open } = useLeadDrawer();
   return (
     <div
       draggable
@@ -163,6 +165,12 @@ function PipelineCard({
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/leads/${lead.id}`}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+              return;
+            e.preventDefault();
+            open(lead.id);
+          }}
           className="text-sm font-semibold text-ink no-underline hover:text-brand"
         >
           {lead.name}

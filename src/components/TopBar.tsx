@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CloseIcon, MenuIcon } from "./icons";
+import { CloseIcon, MenuIcon, SearchIcon } from "./icons";
 import { ConnectionsPanel, Logo, NavLinks } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
+import { openCommandPalette } from "./CommandPalette";
 
 export default function TopBar() {
   const [open, setOpen] = useState(false);
@@ -30,6 +31,14 @@ export default function TopBar() {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 backdrop-blur shell:hidden">
         <Logo />
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={openCommandPalette}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-strong bg-card text-ink transition-colors hover:bg-hover"
+          >
+            <SearchIcon size={18} />
+          </button>
           <ThemeToggle compact />
           <button
             type="button"

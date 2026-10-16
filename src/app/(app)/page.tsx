@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { OverviewTopline } from "@/components/OverviewTopline";
+import { QualityDonut } from "@/components/QualityDonut";
 import { StatusBadge } from "@/components/ui/Badge";
 import {
   agentAccent,
   agentsSummary,
   callsPerDay,
   funnel,
-  leadQuality,
   recentCalls,
 } from "@/lib/data";
 
@@ -82,8 +82,20 @@ export default function OverviewPage() {
             {callsPerDay.map((d) => (
               <div
                 key={d.day}
-                className="group flex h-full flex-grow basis-0 flex-col justify-end gap-0.5"
+                className="group relative flex h-full flex-grow basis-0 flex-col justify-end gap-0.5"
               >
+                {/* Hover tooltip */}
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2.5 py-1.5 text-[11px] text-page shadow-md group-hover:block">
+                  <div className="font-semibold">
+                    {d.day} · {d.total} calls
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-sm bg-brand" />
+                    {d.real} real
+                    <span className="ml-1 h-2 w-2 rounded-sm bg-brand-bar-soft" />
+                    {d.other} spam/unclear
+                  </div>
+                </div>
                 <div className="text-center font-mono text-[11px] text-muted">
                   {d.total}
                 </div>
@@ -113,22 +125,7 @@ export default function OverviewPage() {
         {/* Lead quality */}
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-semibold">Lead quality</h2>
-          {leadQuality.map((q) => (
-            <div key={q.label} className="flex flex-col gap-2">
-              <div className="flex justify-between text-sm">
-                <span>{q.label}</span>
-                <span className="font-mono text-muted2">
-                  {q.count} · {q.pct}%
-                </span>
-              </div>
-              <div className="h-2 rounded bg-track">
-                <div
-                  className="h-2 rounded"
-                  style={{ width: `${q.pct}%`, background: q.color }}
-                />
-              </div>
-            </div>
-          ))}
+          <QualityDonut />
 
           <div className="flex flex-col gap-2.5 border-t border-hairline pt-3.5">
             <div className="text-[13px] font-semibold">Agents on the line</div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { SearchIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLeadDrawer } from "@/components/LeadDrawer";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { ScoreBar } from "@/components/ui/ScoreBar";
@@ -23,6 +24,13 @@ type AgentFilter = "All agents" | "Nora" | "Bob";
 
 const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
 const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob"];
+
+// `ts` is ISO; its date part ("YYYY-MM-DD") compares lexically against the
+// native <input type="date"> values. Empty bound = open-ended.
+const inRange = (l: Lead, from: string, to: string) => {
+  const day = l.ts.slice(0, 10);
+  return (!from || day >= from) && (!to || day <= to);
+};
 
 const chipClass = (on: boolean) =>
   `min-h-10 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
@@ -46,21 +54,34 @@ const defaultDir = (k: SortKey): "asc" | "desc" =>
 export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
+  const { open } = useLeadDrawer();
+
+  // Plain left-click opens the drawer; modifier/middle clicks deep-link as usual.
+  const openDrawer = (e: MouseEvent<HTMLElement>, id: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    open(id);
+  };
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [agent, setAgent] = useState<AgentFilter>("All agents");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>({ key: "when", dir: "desc" });
   const [page, setPage] = useState(1);
 
-  // Recency rank from the source order (index 0 = most recent).
-  const orderIndex = useMemo(
-    () => new Map(leads.map((l, i) => [l.id, i])),
-    [leads],
-  );
+  // Min/max selectable days, derived from the data.
+  const days = useMemo(() => leads.map((l) => l.ts.slice(0, 10)).sort(), [leads]);
+  const minDay = days[0];
+  const maxDay = days[days.length - 1];
 
   const byAgent = useMemo(
-    () => (agent === "All agents" ? leads : leads.filter((l) => l.agent === agent)),
-    [agent, leads],
+    () =>
+      leads.filter(
+        (l) =>
+          (agent === "All agents" || l.agent === agent) && inRange(l, from, to),
+      ),
+    [agent, from, to, leads],
   );
 
   const exportCsv = () => {
@@ -124,17 +145,14 @@ export default function LeadsPage() {
         ? l.score
         : sort.key === "dur"
           ? durToSec(l.dur)
-          : sort.key === "when"
-            ? -(orderIndex.get(l.id) ?? 0) // higher = more recent
-            : null;
+          : null;
     return [...rows].sort((a, b) => {
+      if (sort.key === "when") return a.ts.localeCompare(b.ts) * dir;
       const na = num(a);
       if (na !== null) return (na - (num(b) as number)) * dir;
-      return (
-        String(a[sort.key]).localeCompare(String(b[sort.key])) * dir
-      );
+      return String(a[sort.key]).localeCompare(String(b[sort.key])) * dir;
     });
-  }, [rows, sort, orderIndex]);
+  }, [rows, sort]);
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const start = (page - 1) * PAGE_SIZE;
@@ -143,7 +161,7 @@ export default function LeadsPage() {
   // Snap back to page 1 whenever the result set or ordering changes.
   useEffect(() => {
     setPage(1);
-  }, [filter, agent, query, sort]);
+  }, [filter, agent, from, to, query, sort]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -209,6 +227,40 @@ export default function LeadsPage() {
           />
         </label>
 
+        <div className="flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card px-3 text-sm text-ink">
+          <input
+            type="date"
+            aria-label="From date"
+            value={from}
+            min={minDay}
+            max={to || maxDay}
+            onChange={(e) => setFrom(e.target.value)}
+            className="bg-transparent text-sm text-ink outline-none"
+          />
+          <span className="text-muted">–</span>
+          <input
+            type="date"
+            aria-label="To date"
+            value={to}
+            min={from || minDay}
+            max={maxDay}
+            onChange={(e) => setTo(e.target.value)}
+            className="bg-transparent text-sm text-ink outline-none"
+          />
+          {(from || to) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFrom("");
+                setTo("");
+              }}
+              className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         <div
           role="group"
           aria-label="Filter by status"
@@ -248,7 +300,8 @@ export default function LeadsPage() {
 
       {/* Table */}
       <section className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden overflow-x-auto shell:block">
           <div className="min-w-[960px]">
             <div className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]">
               <SortHeader label="Lead" k="name" />
@@ -266,6 +319,7 @@ export default function LeadsPage() {
                 <Link
                   key={r.id}
                   href={`/leads/${r.id}`}
+                  onClick={(e) => openDrawer(e, r.id)}
                   className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]"
                 >
                   <span className="flex flex-col gap-0.5">
@@ -289,14 +343,52 @@ export default function LeadsPage() {
                 </Link>
               );
             })}
-
-            {rows.length === 0 && (
-              <div className="px-5 py-10 text-center text-sm text-muted">
-                No leads with this status
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Mobile cards */}
+        <div className="flex flex-col shell:hidden">
+          {paged.map((r) => {
+            const accent = agentAccent[r.agent];
+            return (
+              <Link
+                key={r.id}
+                href={`/leads/${r.id}`}
+                onClick={(e) => openDrawer(e, r.id)}
+                className="flex flex-col gap-2.5 border-b border-row p-4 text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-semibold">{r.name}</span>
+                    <span className="font-mono text-xs text-muted">{r.phone}</span>
+                  </div>
+                  <StatusBadge status={r.status} />
+                </div>
+                <div className="text-[13px] text-sub">{r.intent}</div>
+                <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
+                <div className="flex items-center justify-between gap-3 text-xs text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold"
+                      style={{ background: accent.bg, color: accent.fg }}
+                    >
+                      {r.agent[0]}
+                    </span>
+                    {r.agent}
+                  </span>
+                  <span className="font-mono">{r.dur}</span>
+                  <span>{r.when}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {rows.length === 0 && (
+          <div className="px-5 py-10 text-center text-sm text-muted">
+            No leads match these filters
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 text-[13px] text-muted">
           <span>
