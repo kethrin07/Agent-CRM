@@ -29,7 +29,18 @@ export default function TopBar() {
       {/* Mobile-only bar: logo + theme toggle + menu. On desktop the toggle
           lives in each page header and the sidebar carries the logo/nav. */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 backdrop-blur shell:hidden">
-        <Logo />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={open}
+            onClick={() => setOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-strong bg-card text-ink transition-colors hover:bg-hover"
+          >
+            <MenuIcon />
+          </button>
+          <Logo />
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -40,15 +51,6 @@ export default function TopBar() {
             <SearchIcon size={18} />
           </button>
           <ThemeToggle compact />
-          <button
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border-strong bg-card text-ink transition-colors hover:bg-hover"
-          >
-            <MenuIcon />
-          </button>
         </div>
       </header>
 
