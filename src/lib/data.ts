@@ -164,41 +164,123 @@ export const kpisByRange: Record<RangeKey, Kpi[]> = {
 // Default range used by any non-interactive consumer (e.g. skeleton sizing).
 export const kpis = kpisByRange["7d"];
 
-// Conversion funnel: inbound call → closed customer (aggregate, last 7 days)
-export const funnel: { label: string; value: number; color: string }[] = [
-  { label: "Inbound calls", value: 1042, color: "var(--color-neutral-dot)" },
-  { label: "Real leads", value: 418, color: "var(--color-brand-bar-soft)" },
-  { label: "Contacted", value: 356, color: "var(--color-brand)" },
-  { label: "Quoted", value: 214, color: "var(--color-purple-dot)" },
-  { label: "Won", value: 103, color: "var(--color-good)" },
-];
+// Conversion funnel: inbound call → closed customer, per range.
+export type FunnelStep = { label: string; value: number; color: string };
 
-// [day, realLeads, spam/unclear]
-const callsRaw: [string, number, number][] = [
-  ["Mon", 52, 81],
-  ["Tue", 61, 88],
-  ["Wed", 58, 95],
-  ["Thu", 70, 92],
-  ["Fri", 66, 99],
-  ["Sat", 49, 71],
-  ["Sun", 62, 88],
+const funnelLabels = ["Inbound calls", "Real leads", "Contacted", "Quoted", "Won"];
+const funnelColors = [
+  "var(--color-neutral-dot)",
+  "var(--color-brand-bar-soft)",
+  "var(--color-brand)",
+  "var(--color-purple-dot)",
+  "var(--color-good)",
 ];
+const mkFunnel = (vals: number[]): FunnelStep[] =>
+  vals.map((value, i) => ({
+    label: funnelLabels[i],
+    value,
+    color: funnelColors[i],
+  }));
 
-const CALLS_MAX = 170;
-export const callsPerDay = callsRaw.map(([day, real, other]) => ({
-  day,
-  real,
-  other,
-  total: real + other,
-  realH: Math.round((real / CALLS_MAX) * 160 * 0.55),
-  otherH: Math.round((other / CALLS_MAX) * 160 * 0.55),
-}));
+export const funnelByRange: Record<RangeKey, FunnelStep[]> = {
+  "24h": mkFunnel([168, 69, 58, 35, 16]),
+  "7d": mkFunnel([1042, 418, 356, 214, 103]),
+  "30d": mkFunnel([4310, 1724, 1470, 884, 425]),
+};
+export const funnel = funnelByRange["7d"];
 
-export const leadQuality = [
-  { label: "Real lead", count: 418, pct: 40, color: "var(--color-good)" },
-  { label: "Unclear", count: 337, pct: 32, color: "var(--color-warn-bar)" },
-  { label: "Spam", count: 287, pct: 28, color: "var(--color-bad-bar)" },
-];
+// Call volume chart, per range. [label, realLeads, spam/unclear]; most recent
+// on the right. Buckets differ by range: hourly (24h), daily (7d), weekly (30d).
+export type CallBar = {
+  day: string;
+  real: number;
+  other: number;
+  total: number;
+  realH: number;
+  otherH: number;
+};
+
+const callsRawByRange: Record<RangeKey, [string, number, number][]> = {
+  "24h": [
+    ["12am", 4, 6],
+    ["3am", 3, 5],
+    ["6am", 5, 8],
+    ["9am", 9, 14],
+    ["12pm", 11, 16],
+    ["3pm", 12, 17],
+    ["6pm", 13, 18],
+    ["Now", 12, 15],
+  ],
+  "7d": [
+    ["Oct 10", 52, 81],
+    ["Oct 11", 61, 88],
+    ["Oct 12", 58, 95],
+    ["Oct 13", 70, 92],
+    ["Oct 14", 66, 99],
+    ["Oct 15", 49, 71],
+    ["Today", 62, 88],
+  ],
+  "30d": [
+    ["Sep 22", 300, 450],
+    ["Sep 29", 330, 500],
+    ["Oct 6", 350, 520],
+    ["Oct 13", 360, 540],
+    ["This week", 384, 576],
+  ],
+};
+
+// Scale each range's tallest bar to ~150px within the 200px chart.
+const buildBars = (raw: [string, number, number][]): CallBar[] => {
+  const max = Math.max(...raw.map(([, r, o]) => r + o));
+  const f = 150 / max;
+  return raw.map(([day, real, other]) => ({
+    day,
+    real,
+    other,
+    total: real + other,
+    realH: Math.round(real * f),
+    otherH: Math.round(other * f),
+  }));
+};
+
+export const callsPerDayByRange: Record<RangeKey, CallBar[]> = {
+  "24h": buildBars(callsRawByRange["24h"]),
+  "7d": buildBars(callsRawByRange["7d"]),
+  "30d": buildBars(callsRawByRange["30d"]),
+};
+export const callsPerDay = callsPerDayByRange["7d"];
+
+export const chartTitle: Record<RangeKey, string> = {
+  "24h": "Calls by hour",
+  "7d": "Calls per day",
+  "30d": "Calls per week",
+};
+
+export type QualitySlice = {
+  label: string;
+  count: number;
+  pct: number;
+  color: string;
+};
+
+export const leadQualityByRange: Record<RangeKey, QualitySlice[]> = {
+  "24h": [
+    { label: "Real lead", count: 69, pct: 41, color: "var(--color-good)" },
+    { label: "Unclear", count: 52, pct: 31, color: "var(--color-warn-bar)" },
+    { label: "Spam", count: 47, pct: 28, color: "var(--color-bad-bar)" },
+  ],
+  "7d": [
+    { label: "Real lead", count: 418, pct: 40, color: "var(--color-good)" },
+    { label: "Unclear", count: 337, pct: 32, color: "var(--color-warn-bar)" },
+    { label: "Spam", count: 287, pct: 28, color: "var(--color-bad-bar)" },
+  ],
+  "30d": [
+    { label: "Real lead", count: 1724, pct: 40, color: "var(--color-good)" },
+    { label: "Unclear", count: 1396, pct: 32, color: "var(--color-warn-bar)" },
+    { label: "Spam", count: 1190, pct: 28, color: "var(--color-bad-bar)" },
+  ],
+};
+export const leadQuality = leadQualityByRange["7d"];
 
 export const agentsSummary = [
   {

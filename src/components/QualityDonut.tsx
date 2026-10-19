@@ -1,13 +1,13 @@
-import { leadQuality } from "@/lib/data";
+import type { QualitySlice } from "@/lib/data";
 
 const R = 42;
 const C = 2 * Math.PI * R;
 
-export function QualityDonut() {
-  const total = leadQuality.reduce((sum, q) => sum + q.count, 0);
+export function QualityDonut({ data }: { data: QualitySlice[] }) {
+  const total = data.reduce((sum, q) => sum + q.count, 0);
 
   let acc = 0;
-  const segments = leadQuality.map((q) => {
+  const segments = data.map((q) => {
     const dash = (q.pct / 100) * C;
     const seg = { dash, offset: -(acc / 100) * C, color: q.color };
     acc += q.pct;
@@ -49,7 +49,7 @@ export function QualityDonut() {
       </div>
 
       <div className="flex flex-grow flex-col gap-2.5">
-        {leadQuality.map((q) => (
+        {data.map((q) => (
           <div key={q.label} className="flex items-center gap-2.5 text-sm">
             <span
               className="h-2.5 w-2.5 flex-shrink-0 rounded-sm"
