@@ -141,6 +141,17 @@ html.dark {
   --color-purple-dot: #a883e6;
 }
 
+/* Logo "55" accent: gold twin in light theme, red twin in dark theme */
+[data-twin="dark"] {
+  display: none;
+}
+.dark [data-twin="dark"] {
+  display: inline;
+}
+.dark [data-twin="light"] {
+  display: none;
+}
+
 /* Elevated card surface: border + subtle shadow so cards lift off the paper bg */
 @utility card {
   background: var(--color-card);

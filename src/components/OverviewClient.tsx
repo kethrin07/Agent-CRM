@@ -45,7 +45,7 @@ export function OverviewClient() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[26px] font-semibold tracking-[-0.02em]">Overview</h1>
+          <h1 className="text-[26px] font-semibold tracking-[-0.02em]">Dashboard</h1>
           <div className="text-sm text-muted">
             How Nora and Bob handled inbound calls {rangeSubtitle[range]}
           </div>

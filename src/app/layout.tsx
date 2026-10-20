@@ -17,7 +17,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MyHomeQuote CRM",
+  title: "Milvado55",
   description:
     "How Nora and Bob handle inbound home-insurance calls — leads, transcripts and agent settings.",
 };
