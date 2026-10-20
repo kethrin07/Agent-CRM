@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { ScoreBar } from "@/components/ui/ScoreBar";
 import { useToast } from "@/components/ui/Toast";
 import { useLeads } from "@/lib/leads-store";
+import { useRole } from "@/lib/role";
 import {
   agentAccent,
   statusStyle,
@@ -55,6 +56,13 @@ export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
   const { open } = useLeadDrawer();
+  const { role } = useRole();
+  const isAdmin = role === "admin";
+
+  // Grid loses the 90px AI-score column for clients.
+  const cols = isAdmin
+    ? "minmax(190px,2fr) 110px 90px minmax(180px,2fr) 70px 100px 140px"
+    : "minmax(190px,2fr) 110px minmax(180px,2fr) 70px 100px 140px";
 
   // Plain left-click opens the drawer; modifier/middle clicks deep-link as usual.
   const openDrawer = (e: MouseEvent<HTMLElement>, id: string) => {
@@ -89,7 +97,7 @@ export default function LeadsPage() {
       "Name",
       "Phone",
       "Status",
-      "AI score",
+      ...(isAdmin ? ["AI score"] : []),
       "Intent",
       "Length",
       "Agent",
@@ -103,7 +111,7 @@ export default function LeadsPage() {
         r.name,
         r.phone,
         r.status,
-        r.score,
+        ...(isAdmin ? [r.score] : []),
         r.intent,
         r.dur,
         r.agent,
@@ -303,10 +311,13 @@ export default function LeadsPage() {
         {/* Desktop table */}
         <div className="hidden overflow-x-auto shell:block">
           <div className="min-w-[960px]">
-            <div className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]">
+            <div
+              className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted"
+              style={{ gridTemplateColumns: cols }}
+            >
               <SortHeader label="Lead" k="name" />
               <SortHeader label="Status" k="status" />
-              <SortHeader label="AI score" k="score" />
+              {isAdmin && <SortHeader label="AI score" k="score" />}
               <span>What they want</span>
               <SortHeader label="Length" k="dur" />
               <SortHeader label="Agent" k="agent" />
@@ -320,14 +331,17 @@ export default function LeadsPage() {
                   key={r.id}
                   href={`/leads/${r.id}`}
                   onClick={(e) => openDrawer(e, r.id)}
-                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink [grid-template-columns:minmax(190px,2fr)_110px_90px_minmax(180px,2fr)_70px_100px_140px]"
+                  style={{ gridTemplateColumns: cols }}
+                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink"
                 >
                   <span className="flex flex-col gap-0.5">
                     <span className="font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
                   </span>
                   <StatusBadge status={r.status} />
-                  <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
+                  {isAdmin && (
+                    <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
+                  )}
                   <span className="text-sub">{r.intent}</span>
                   <span className="font-mono text-sub">{r.dur}</span>
                   <span className="flex items-center gap-2 text-sub">
@@ -365,7 +379,9 @@ export default function LeadsPage() {
                   <StatusBadge status={r.status} />
                 </div>
                 <div className="text-[13px] text-sub">{r.intent}</div>
-                <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
+                {isAdmin && (
+                  <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
+                )}
                 <div className="flex items-center justify-between gap-3 text-xs text-muted">
                   <span className="flex items-center gap-1.5">
                     <span

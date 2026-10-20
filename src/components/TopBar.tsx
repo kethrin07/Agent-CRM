@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CloseIcon, MenuIcon, SearchIcon } from "./icons";
 import { ConnectionsPanel, Logo, NavLinks } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
+import { AccountPanel } from "./AccountPanel";
 import { openCommandPalette } from "./CommandPalette";
 
 export default function TopBar() {
@@ -78,6 +79,7 @@ export default function TopBar() {
             </div>
             <NavLinks onNavigate={() => setOpen(false)} />
             <div className="flex-grow" />
+            <AccountPanel />
             <ConnectionsPanel />
           </nav>
         </div>

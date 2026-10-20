@@ -8,6 +8,7 @@ import { LeadActions, CopyTranscriptButton } from "@/components/LeadActions";
 import { RecordingPlayer } from "@/components/RecordingPlayer";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLead } from "@/lib/leads-store";
+import { useRole } from "@/lib/role";
 import { leadFields, qualificationChecks, transcript } from "@/lib/data";
 
 // Fields mirror the ElevenLabs conversation payload (metadata + analysis)
@@ -30,6 +31,8 @@ export function LeadDetailView({
   variant?: "page" | "drawer";
 }) {
   const lead = useLead(id);
+  const { role } = useRole();
+  const isAdmin = role === "admin";
 
   if (!lead) {
     return <div className="text-sm text-muted">Lead not found.</div>;
@@ -81,35 +84,37 @@ export function LeadDetailView({
         <div className="flex flex-col gap-5">
           <LeadLifecycle id={lead.id} />
 
-          {/* AI verdict */}
-          <section className="flex flex-col gap-3.5 card p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">AI verdict</h2>
-              <div className="flex items-baseline gap-1">
-                <span className="font-mono text-[28px] font-semibold">
-                  {lead.score}
-                </span>
-                <span className="text-[13px] text-muted">/ 100</span>
-              </div>
-            </div>
-            <p className="text-sm leading-relaxed text-sub">
-              Linda owns a single-family home in Austin (78704), built in 1998 and
-              worth about $450k. Her current policy renews in May and the price went
-              up, so she is shopping around. She gave a working email and prefers a
-              callback in the morning.
-            </p>
-            <div className="flex flex-col gap-2">
-              {qualificationChecks.map((label) => (
-                <div key={label} className="flex items-center gap-2.5 text-sm">
-                  <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-good-bg text-good-fg">
-                    <CheckIcon />
+          {/* AI verdict (admin only) */}
+          {isAdmin && (
+            <section className="flex flex-col gap-3.5 card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold">AI verdict</h2>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-mono text-[28px] font-semibold">
+                    {lead.score}
                   </span>
-                  <span className="flex-grow">{label}</span>
-                  <span className="text-xs font-semibold text-good-fg">Pass</span>
+                  <span className="text-[13px] text-muted">/ 100</span>
                 </div>
-              ))}
-            </div>
-          </section>
+              </div>
+              <p className="text-sm leading-relaxed text-sub">
+                Linda owns a single-family home in Austin (78704), built in 1998 and
+                worth about $450k. Her current policy renews in May and the price
+                went up, so she is shopping around. She gave a working email and
+                prefers a callback in the morning.
+              </p>
+              <div className="flex flex-col gap-2">
+                {qualificationChecks.map((label) => (
+                  <div key={label} className="flex items-center gap-2.5 text-sm">
+                    <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-good-bg text-good-fg">
+                      <CheckIcon />
+                    </span>
+                    <span className="flex-grow">{label}</span>
+                    <span className="text-xs font-semibold text-good-fg">Pass</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Lead details */}
           <section className="flex flex-col gap-3.5 card p-5">

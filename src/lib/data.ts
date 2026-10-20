@@ -167,7 +167,13 @@ export const kpis = kpisByRange["7d"];
 // Conversion funnel: inbound call → closed customer, per range.
 export type FunnelStep = { label: string; value: number; color: string };
 
-const funnelLabels = ["Inbound calls", "Real leads", "Contacted", "Quoted", "Won"];
+const funnelLabels = [
+  "Inbound calls",
+  "Real leads",
+  "Contacted",
+  "Quoted",
+  "Converted",
+];
 const funnelColors = [
   "var(--color-neutral-dot)",
   "var(--color-brand-bar-soft)",
@@ -381,90 +387,4 @@ export const leadFields = [
   { k: "Current insurer", v: "Not shared, 6 years" },
   { k: "Renewal date", v: "May" },
   { k: "Best time to call", v: "Mornings" },
-];
-
-/* ── Agent settings ── */
-
-export type AgentConfig = {
-  name: string;
-  initial: string;
-  role: string;
-  number: string;
-  hours: string;
-  agentId: string;
-  avBg: string;
-  avFg: string;
-  first: string;
-  prompt: string;
-};
-
-export const agentConfigs: Record<"Nora" | "Bob", AgentConfig> = {
-  Nora: {
-    name: "Nora",
-    initial: "N",
-    role: "Main line",
-    number: "+1 (888) 555-0140",
-    hours: "Mon to Fri, 8am to 6pm CT",
-    agentId: "[NORA_AGENT_ID]",
-    avBg: "#EEF2FC",
-    avFg: "#1E4CC2",
-    first:
-      "Hi, thanks for calling MyHomeQuote, this is Nora. Are you looking for a home insurance quote today?",
-    prompt:
-      "You are Nora, a friendly intake assistant for MyHomeQuote, a home insurance quote service. You only answer inbound calls.\n\nGoal: confirm the caller wants a home insurance quote, then collect their name, ZIP code, home type, whether they own it, year built, home value, renewal date and best time to call.\n\nRules:\n- Keep answers short and natural.\n- Never quote prices. A licensed agent will call back.\n- If the caller is a robocall, silent or selling something, end the call politely.",
-  },
-  Bob: {
-    name: "Bob",
-    initial: "B",
-    role: "Overflow & after-hours",
-    number: "+1 (888) 555-0177",
-    hours: "Evenings, weekends and overflow",
-    agentId: "[BOB_AGENT_ID]",
-    avBg: "#F1EDE4",
-    avFg: "#6B4A12",
-    first:
-      "Thanks for calling MyHomeQuote, I’m Bob. Our office is closed right now, but I can get your home insurance quote started. What’s your name?",
-    prompt:
-      "You are Bob, the after-hours and overflow assistant for MyHomeQuote, a home insurance quote service. You only answer inbound calls.\n\nGoal: collect the same details Nora does (name, ZIP code, home type, ownership, year built, home value, renewal date, best time to call) so a licensed agent can call back next business day.\n\nRules:\n- Let callers know the office is closed and someone will follow up.\n- Never quote prices.\n- If the caller is a robocall, silent or selling something, end the call politely.",
-  },
-};
-
-export const voiceLibrary = [
-  { name: "Clara", desc: "Warm · US female" },
-  { name: "Grant", desc: "Friendly · US male" },
-  { name: "Elena", desc: "Bright · US female" },
-  { name: "Theo", desc: "Calm · US male" },
-];
-
-export const defaultVoice: Record<"Nora" | "Bob", string> = {
-  Nora: "Clara",
-  Bob: "Grant",
-};
-
-export const knowledgeBase = [
-  { type: "PDF", name: "Home insurance coverage guide.pdf", meta: "2.4 MB · added Sep 22" },
-  { type: "CSV", name: "Service area ZIP codes.csv", meta: "1,812 rows · added Sep 22" },
-  { type: "URL", name: "https://[YOUR-DOMAIN]/home-insurance", meta: "9 pages crawled · Sep 24" },
-  { type: "TXT", name: "Objection handling", meta: "1,240 words · edited Sep 28" },
-];
-
-export const qualificationRules = [
-  { label: "Real person, not a robocall or silence", on: true },
-  { label: "Wants a home insurance quote", on: true },
-  { label: "Owns the home or is buying one", on: true },
-  { label: "Gave a valid phone number or email", on: true },
-  { label: "Home is in a ZIP code we serve", on: false },
-];
-
-// Types mirror ElevenLabs data-collection schema types (String/Number/Integer/Boolean)
-export const collectFields = [
-  { key: "full_name", type: "String" },
-  { key: "email", type: "String" },
-  { key: "zip_code", type: "String" },
-  { key: "home_type", type: "String" },
-  { key: "is_owner", type: "Boolean" },
-  { key: "year_built", type: "Integer" },
-  { key: "home_value", type: "Number" },
-  { key: "renewal_date", type: "String" },
-  { key: "best_time_to_call", type: "String" },
 ];

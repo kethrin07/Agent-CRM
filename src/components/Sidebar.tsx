@@ -1,5 +1,6 @@
 import { ConnectionsPanel, Logo, NavLinks } from "./nav";
 import { SidebarSearchButton } from "./SidebarSearchButton";
+import { AccountPanel } from "./AccountPanel";
 
 export default function Sidebar() {
   return (
@@ -14,6 +15,7 @@ export default function Sidebar() {
       <div className="h-1.5" />
       <NavLinks />
       <div className="flex-grow" />
+      <AccountPanel />
       <ConnectionsPanel />
     </nav>
   );

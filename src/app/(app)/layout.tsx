@@ -4,13 +4,15 @@ import TopBar from "@/components/TopBar";
 import { LeadsStoreProvider } from "@/lib/leads-store";
 import { LeadDrawerProvider } from "@/components/LeadDrawer";
 import { CommandPalette } from "@/components/CommandPalette";
+import { RequireRole } from "@/components/RequireRole";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export default function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ToastProvider>
+    <RequireRole>
+      <ToastProvider>
       <LeadsStoreProvider>
         <LeadDrawerProvider>
         <CommandPalette />
@@ -31,6 +33,7 @@ export default function AppLayout({
         </div>
         </LeadDrawerProvider>
       </LeadsStoreProvider>
-    </ToastProvider>
+      </ToastProvider>
+    </RequireRole>
   );
 }

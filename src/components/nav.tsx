@@ -3,14 +3,12 @@
 import { useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GridIcon, KanbanIcon, MicIcon, UsersIcon } from "./icons";
+import { GridIcon, UsersIcon } from "./icons";
 import { connections } from "@/lib/data";
 
 export const navItems = [
   { href: "/", label: "Dashboard", Icon: GridIcon },
   { href: "/leads", label: "Leads & calls", Icon: UsersIcon },
-  { href: "/pipeline", label: "Pipeline", Icon: KanbanIcon },
-  { href: "/agent", label: "Agent settings", Icon: MicIcon },
 ] as const;
 
 /** Compact Ø monogram — kept for splash/login use. */
