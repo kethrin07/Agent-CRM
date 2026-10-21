@@ -162,15 +162,17 @@ html.dark {
     0 1px 2px rgb(22 24 29 / 0.025);
 }
 
-/* Visible keyboard focus for every interactive element */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
+/* Keyboard focus ring for buttons/links/tabbable elements only. These suppress
+   :focus-visible on mouse clicks, so the ring is keyboard-only. Form fields are
+   excluded on purpose — they match :focus-visible even on click, so they show
+   focus via their own border instead (no stray outline box). */
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
 }
 
 @keyframes fade-in {
