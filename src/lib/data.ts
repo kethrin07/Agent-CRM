@@ -61,9 +61,9 @@ export const stageMeta: Record<
   },
   Quoted: {
     label: "Quoted",
-    bg: "var(--color-purple-bg)",
-    fg: "var(--color-purple-fg)",
-    dot: "var(--color-purple-dot)",
+    bg: "var(--color-teal-bg)",
+    fg: "var(--color-teal-fg)",
+    dot: "var(--color-teal-dot)",
   },
   Won: {
     label: "Won",
@@ -90,7 +90,7 @@ export type TeamMember = {
 export const team: TeamMember[] = [
   { id: "maya", name: "Maya Chen", initial: "MC", bg: "var(--color-nora-bg)", fg: "var(--color-nora-fg)" },
   { id: "devin", name: "Devin Ross", initial: "DR", bg: "var(--color-good-bg)", fg: "var(--color-good-fg)" },
-  { id: "priya", name: "Priya Shah", initial: "PS", bg: "var(--color-purple-bg)", fg: "var(--color-purple-fg)" },
+  { id: "priya", name: "Priya Shah", initial: "PS", bg: "var(--color-teal-bg)", fg: "var(--color-teal-fg)" },
 ];
 
 export const teamById = (id: string | null): TeamMember | null =>
@@ -174,12 +174,13 @@ const funnelLabels = [
   "Quoted",
   "Converted",
 ];
+// Single blue ramp (pale → deep) so the funnel reads as one progression.
 const funnelColors = [
-  "var(--color-neutral-dot)",
-  "var(--color-brand-bar-soft)",
-  "var(--color-brand)",
-  "var(--color-purple-dot)",
-  "var(--color-good)",
+  "#C2D1EF",
+  "#98B4EA",
+  "#6588DE",
+  "#3E65D2",
+  "#2149BE",
 ];
 const mkFunnel = (vals: number[]): FunnelStep[] =>
   vals.map((value, i) => ({

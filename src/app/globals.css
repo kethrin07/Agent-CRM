@@ -54,13 +54,13 @@
   --color-bob-bg: #f1ede4;
   --color-bob-fg: #6b4a12;
 
-  /* Lifecycle accents (neutral + purple; others reuse status/agent tokens) */
+  /* Lifecycle accents (neutral + teal; others reuse status/agent tokens) */
   --color-neutral-bg: #eef1f6;
   --color-neutral-fg: #3d4250;
   --color-neutral-dot: #8a8f9c;
-  --color-purple-bg: #f3eefc;
-  --color-purple-fg: #6b3fa0;
-  --color-purple-dot: #8a5cd1;
+  --color-teal-bg: #e2f2f1;
+  --color-teal-fg: #0f6b66;
+  --color-teal-dot: #15a097;
 }
 
 @layer base {
@@ -136,9 +136,9 @@ html.dark {
   --color-neutral-bg: #2b2e35;
   --color-neutral-fg: #c2c4ca;
   --color-neutral-dot: #8a8f9c;
-  --color-purple-bg: #2a2140;
-  --color-purple-fg: #c3a3ef;
-  --color-purple-dot: #a883e6;
+  --color-teal-bg: #0f3330;
+  --color-teal-fg: #4fd0c6;
+  --color-teal-dot: #2bb3a8;
 }
 
 /* Logo "55" accent: gold twin in light theme, red twin in dark theme */

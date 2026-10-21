@@ -43,7 +43,7 @@ const chipClass = (on: boolean) =>
 type SortKey = "name" | "status" | "score" | "dur" | "agent" | "when";
 type Sort = { key: SortKey; dir: "asc" | "desc" };
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 const durToSec = (d: string) => {
   const [m, s] = d.split(":").map(Number);
   return (m || 0) * 60 + (s || 0);
@@ -180,6 +180,21 @@ export default function LeadsPage() {
 
   const countFor = (f: StatusFilter) =>
     f === "All" ? byAgent.length : byAgent.filter((l) => l.status === f).length;
+
+  const hasFilters =
+    filter !== "All" ||
+    agent !== "All agents" ||
+    Boolean(from) ||
+    Boolean(to) ||
+    Boolean(query.trim());
+
+  const clearFilters = () => {
+    setFilter("All");
+    setAgent("All agents");
+    setFrom("");
+    setTo("");
+    setQuery("");
+  };
 
   const SortHeader = ({ label, k }: { label: string; k: SortKey }) => {
     const active = sort.key === k;
@@ -369,20 +384,26 @@ export default function LeadsPage() {
                 key={r.id}
                 href={`/leads/${r.id}`}
                 onClick={(e) => openDrawer(e, r.id)}
-                className="flex flex-col gap-2.5 border-b border-row p-4 text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink"
+                className="flex flex-col gap-2 border-b border-row px-4 py-3.5 text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="font-semibold">{r.name}</span>
+                    <span className="truncate font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
                   </div>
-                  <StatusBadge status={r.status} />
+                  <div className="flex flex-shrink-0 flex-col items-end gap-1">
+                    <StatusBadge status={r.status} />
+                    {isAdmin && (
+                      <span className="font-mono text-[11px] text-muted">
+                        AI {r.score}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-[13px] text-sub">{r.intent}</div>
-                {isAdmin && (
-                  <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
-                )}
-                <div className="flex items-center justify-between gap-3 text-xs text-muted">
+
+                <div className="line-clamp-2 text-[13px] text-sub">{r.intent}</div>
+
+                <div className="flex items-center gap-2 text-xs text-muted">
                   <span className="flex items-center gap-1.5">
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold"
@@ -392,8 +413,11 @@ export default function LeadsPage() {
                     </span>
                     {r.agent}
                   </span>
+                  <span aria-hidden="true" className="text-border-strong">
+                    ·
+                  </span>
                   <span className="font-mono">{r.dur}</span>
-                  <span>{r.when}</span>
+                  <span className="ml-auto whitespace-nowrap">{r.when}</span>
                 </div>
               </Link>
             );
@@ -401,8 +425,23 @@ export default function LeadsPage() {
         </div>
 
         {rows.length === 0 && (
-          <div className="px-5 py-10 text-center text-sm text-muted">
-            No leads match these filters
+          <div className="flex flex-col items-center gap-3 px-5 py-14 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-hover text-muted">
+              <SearchIcon size={20} />
+            </span>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-ink">No leads found</p>
+              <p className="text-[13px] text-muted">
+                {hasFilters
+                  ? "No calls match your current filters."
+                  : "Calls will appear here as they come in."}
+              </p>
+            </div>
+            {hasFilters && (
+              <Button size="sm" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )}
           </div>
         )}
 

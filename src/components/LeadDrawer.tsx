@@ -8,8 +8,9 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { CloseIcon } from "@/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "@/components/icons";
 import { LeadDetailView } from "@/components/LeadDetailView";
+import { useLeads } from "@/lib/leads-store";
 
 type Ctx = { open: (id: string) => void; close: () => void; openId: string | null };
 
@@ -22,10 +23,16 @@ export function useLeadDrawer(): Ctx {
 }
 
 export function LeadDrawerProvider({ children }: { children: React.ReactNode }) {
+  const { leads } = useLeads();
   const [openId, setOpenId] = useState<string | null>(null);
 
   const open = useCallback((id: string) => setOpenId(id), []);
   const close = useCallback(() => setOpenId(null), []);
+
+  // Step through leads in list order without leaving the drawer.
+  const index = openId ? leads.findIndex((l) => l.id === openId) : -1;
+  const prevId = index > 0 ? leads[index - 1].id : null;
+  const nextId = index >= 0 && index < leads.length - 1 ? leads[index + 1].id : null;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -56,10 +63,30 @@ export function LeadDrawerProvider({ children }: { children: React.ReactNode }) 
             aria-label="Lead detail"
             className="absolute inset-y-0 right-0 flex w-full max-w-[560px] flex-col overflow-y-auto bg-page shadow-xl animate-[drawer-in-right_220ms_ease-out]"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-page/90 px-5 py-3 backdrop-blur">
-              <span className="text-sm font-semibold text-muted">
-                Lead detail
-              </span>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-page/90 px-4 py-3 backdrop-blur">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Previous lead"
+                  disabled={!prevId}
+                  onClick={() => prevId && setOpenId(prevId)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <ChevronLeftIcon size={18} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next lead"
+                  disabled={!nextId}
+                  onClick={() => nextId && setOpenId(nextId)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <ChevronRightIcon size={18} />
+                </button>
+                <span className="ml-1 text-sm font-semibold text-muted">
+                  Lead detail
+                </span>
+              </div>
               <div className="flex items-center gap-1.5">
                 <Link
                   href={`/leads/${openId}`}
