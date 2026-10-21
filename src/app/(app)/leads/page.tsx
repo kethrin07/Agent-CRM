@@ -36,7 +36,7 @@ const inRange = (l: Lead, from: string, to: string) => {
 const chipClass = (on: boolean) =>
   `min-h-10 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
     on
-      ? "border-ink bg-ink text-white"
+      ? "border-ink bg-ink text-page"
       : "border-border-strong bg-card text-ink hover:bg-hover"
   }`;
 

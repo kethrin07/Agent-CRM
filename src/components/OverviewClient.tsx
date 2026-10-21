@@ -146,7 +146,7 @@ export function OverviewClient() {
       </section>
 
       {/* Chart + quality */}
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="grid items-start gap-4 [grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]">
         {/* Calls per day */}
         <section className="card flex flex-col gap-[18px] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">

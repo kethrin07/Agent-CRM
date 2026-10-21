@@ -34,7 +34,11 @@ try {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${plexSans.variable} ${plexMono.variable}`}
+    >
       <body className="antialiased">
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <RoleProvider>{children}</RoleProvider>
