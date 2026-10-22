@@ -306,6 +306,34 @@ export const agentsSummary = [
   },
 ];
 
+/* ── Agent performance (Nora vs Bob), per range ── */
+
+export type AgentPerf = {
+  name: "Nora" | "Bob";
+  initial: string;
+  role: string;
+  calls: number;
+  real: number;
+  spam: number;
+  converted: number;
+  avgLen: string;
+};
+
+export const agentPerfByRange: Record<RangeKey, AgentPerf[]> = {
+  "24h": [
+    { name: "Nora", initial: "N", role: "Main line", calls: 99, real: 44, spam: 24, converted: 11, avgLen: "3:01" },
+    { name: "Bob", initial: "B", role: "Overflow & after-hours", calls: 69, real: 25, spam: 23, converted: 5, avgLen: "2:12" },
+  ],
+  "7d": [
+    { name: "Nora", initial: "N", role: "Main line", calls: 612, real: 268, spam: 150, converted: 72, avgLen: "3:05" },
+    { name: "Bob", initial: "B", role: "Overflow & after-hours", calls: 430, real: 150, spam: 137, converted: 31, avgLen: "2:18" },
+  ],
+  "30d": [
+    { name: "Nora", initial: "N", role: "Main line", calls: 2530, real: 1108, spam: 620, converted: 298, avgLen: "3:08" },
+    { name: "Bob", initial: "B", role: "Overflow & after-hours", calls: 1780, real: 616, spam: 570, converted: 127, avgLen: "2:20" },
+  ],
+};
+
 /* ── Leads & recent calls ── */
 
 export type Lead = {

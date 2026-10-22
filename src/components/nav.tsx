@@ -3,12 +3,14 @@
 import { useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GridIcon, UsersIcon } from "./icons";
+import { GridIcon, MicIcon, UsersIcon } from "./icons";
 import { connections } from "@/lib/data";
+import { useRole } from "@/lib/role";
 
 export const navItems = [
-  { href: "/", label: "Dashboard", Icon: GridIcon },
-  { href: "/leads", label: "Leads & calls", Icon: UsersIcon },
+  { href: "/", label: "Dashboard", Icon: GridIcon, adminOnly: false },
+  { href: "/leads", label: "Leads & calls", Icon: UsersIcon, adminOnly: false },
+  { href: "/agents", label: "Agent performance", Icon: MicIcon, adminOnly: true },
 ] as const;
 
 /** Compact Ø monogram — kept for splash/login use. */
@@ -131,12 +133,16 @@ export function Logo() {
 
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { role } = useRole();
+  const isAdmin = role === "admin";
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <>
-      {navItems.map(({ href, label, Icon }) => {
+      {navItems
+        .filter((i) => !i.adminOnly || isAdmin)
+        .map(({ href, label, Icon }) => {
         const active = isActive(href);
         return (
           <Link

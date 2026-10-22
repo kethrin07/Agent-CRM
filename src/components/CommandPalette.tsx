@@ -6,6 +6,7 @@ import { SearchIcon } from "@/components/icons";
 import { navItems } from "@/components/nav";
 import { useLeadDrawer } from "@/components/LeadDrawer";
 import { useLeads } from "@/lib/leads-store";
+import { useRole } from "@/lib/role";
 
 /** Trigger the palette from anywhere (e.g. a toolbar button). */
 export function openCommandPalette() {
@@ -26,6 +27,8 @@ export function CommandPalette() {
   const router = useRouter();
   const { leads } = useLeads();
   const { open: openLead } = useLeadDrawer();
+  const { role } = useRole();
+  const isAdmin = role === "admin";
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -68,6 +71,7 @@ export function CommandPalette() {
     const q = query.trim().toLowerCase();
 
     const pages: Result[] = navItems
+      .filter((p) => !p.adminOnly || isAdmin)
       .filter((p) => !q || p.label.toLowerCase().includes(q))
       .map((p) => ({
         kind: "page",
@@ -103,7 +107,7 @@ export function CommandPalette() {
       }));
 
     return [...pages, ...leadResults];
-  }, [query, leads, router, openLead]);
+  }, [query, leads, router, openLead, isAdmin]);
 
   // Keep selection in range as results change.
   useEffect(() => {

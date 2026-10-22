@@ -8,10 +8,7 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLeadDrawer } from "@/components/LeadDrawer";
-import { useRole } from "@/lib/role";
 import {
-  agentAccent,
-  agentsSummary,
   callsPerDayByRange,
   chartTitle,
   funnelByRange,
@@ -26,8 +23,6 @@ import {
 export function OverviewClient() {
   const [range, setRange] = useState<RangeKey>("7d");
   const { open } = useLeadDrawer();
-  const { role } = useRole();
-  const isAdmin = role === "admin";
 
   const kpis = kpisByRange[range];
   const funnel = funnelByRange[range];
@@ -213,40 +208,6 @@ export function OverviewClient() {
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-semibold">Lead quality</h2>
           <QualityDonut data={quality} />
-
-          {isAdmin && (
-            <div className="flex flex-col gap-2.5 border-t border-hairline pt-3.5">
-              <div className="text-[13px] font-semibold">Agents on the line</div>
-              {agentsSummary.map((a) => {
-                const accent = agentAccent[a.name];
-                return (
-                  <div
-                    key={a.name}
-                    className="flex items-center gap-3 py-1.5 text-ink"
-                  >
-                    <div
-                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-semibold"
-                      style={{ background: accent.bg, color: accent.fg }}
-                    >
-                      {a.initial}
-                    </div>
-                    <div className="flex flex-grow flex-col gap-0.5 text-[13px]">
-                      <span className="font-semibold">
-                        {a.name} · {a.role}
-                      </span>
-                      <span className="text-muted">
-                        {a.number} · {a.calls} calls this week
-                      </span>
-                    </div>
-                    <span className="flex items-center gap-1.5 text-xs text-good-fg">
-                      <span className="h-2 w-2 rounded-full bg-good" />
-                      Live
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </section>
       </div>
 
