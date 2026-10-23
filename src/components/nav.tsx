@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GridIcon, MicIcon, UsersIcon } from "./icons";
@@ -134,14 +134,19 @@ export function Logo() {
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { role } = useRole();
-  const isAdmin = role === "admin";
+  // Local mounted flag (not the shared RoleProvider one): guaranteed false
+  // during this component's own hydration render, so server + first client
+  // render always match even though the provider resolves role earlier.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const showAdmin = mounted && role === "admin";
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <>
       {navItems
-        .filter((i) => !i.adminOnly || isAdmin)
+        .filter((i) => !i.adminOnly || showAdmin)
         .map(({ href, label, Icon }) => {
         const active = isActive(href);
         return (
