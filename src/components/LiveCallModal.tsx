@@ -3,14 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import { CloseIcon, HeadphonesIcon } from "@/components/icons";
 import { VoiceWaves } from "@/components/LiveCalls";
-import { useLiveCalls, fmtDuration } from "@/lib/live-calls";
+import { useLiveCalls, fmtDuration, type LiveCall } from "@/lib/live-calls";
 import { agentAccent } from "@/lib/data";
 
 export function LiveCallModal() {
   const { calls, openCallId, close } = useLiveCalls();
   const [listening, setListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const call = calls.find((c) => c.id === openCallId) ?? null;
+
+  // The live call for the open id, if it's still active.
+  const liveCall = calls.find((c) => c.id === openCallId) ?? null;
+  // Retain the last snapshot so that when a call ends (drops out of `calls`)
+  // we can show a "Call ended" state with its final transcript instead of the
+  // drawer vanishing mid-listen.
+  const lastCallRef = useRef<LiveCall | null>(null);
+  useEffect(() => {
+    if (liveCall) lastCallRef.current = liveCall;
+  }, [liveCall]);
+  useEffect(() => {
+    if (!openCallId) lastCallRef.current = null;
+  }, [openCallId]);
+
+  // Render from the live call, or fall back to the retained snapshot once ended.
+  const call = liveCall ?? lastCallRef.current;
+  const ended = openCallId != null && liveCall == null;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -37,9 +53,13 @@ export function LiveCallModal() {
   if (!call) return null;
   const accent = agentAccent[call.agent];
   const agentSpeaking = call.speaker === "agent";
-  const speakerColor = agentSpeaking
-    ? "var(--color-brand)"
-    : "var(--color-sub)";
+  const speakerColor = ended
+    ? "var(--color-muted)"
+    : agentSpeaking
+      ? "var(--color-brand)"
+      : "var(--color-sub)";
+  // No live audio to listen to once the call has ended.
+  const audioActive = listening && !ended;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -54,8 +74,12 @@ export function LiveCallModal() {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-border bg-page/90 px-5 py-3 backdrop-blur">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-bad-bar" />
-            Live call
+            <span
+              className={`h-2 w-2 rounded-full ${
+                ended ? "bg-dash" : "animate-pulse bg-bad-bar"
+              }`}
+            />
+            {ended ? "Call ended" : "Live call"}
           </div>
           <button
             type="button"
@@ -78,7 +102,9 @@ export function LiveCallModal() {
               >
                 {call.agent[0]}
               </span>
-              <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border-2 border-page bg-bad-bar" />
+              {!ended && (
+                <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border-2 border-page bg-bad-bar" />
+              )}
             </span>
             <div className="flex min-w-0 flex-col">
               <span className="font-semibold">
@@ -95,12 +121,16 @@ export function LiveCallModal() {
 
           {/* Speaker panel */}
           <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-7">
-            {/* Ripples only while actually listening to the audio */}
-            <VoiceWaves active={listening} size={88} color={speakerColor} />
-            <div className="text-sm font-medium">
-              {agentSpeaking
-                ? `${call.agent} is speaking…`
-                : "Caller is speaking…"}
+            {/* Ripples only while actually listening to a live call */}
+            <VoiceWaves active={audioActive} size={88} color={speakerColor} />
+            <div
+              className={`text-sm font-medium ${ended ? "text-muted" : ""}`}
+            >
+              {ended
+                ? "This call has ended"
+                : agentSpeaking
+                  ? `${call.agent} is speaking…`
+                  : "Caller is speaking…"}
             </div>
           </div>
 
@@ -108,27 +138,41 @@ export function LiveCallModal() {
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              aria-pressed={listening}
+              disabled={ended}
+              aria-pressed={audioActive}
               onClick={() => setListening((l) => !l)}
               className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                listening
-                  ? "border-brand bg-brand-soft text-brand"
-                  : "border-border-strong bg-card text-ink hover:bg-hover"
+                ended
+                  ? "cursor-not-allowed border-border bg-card text-muted opacity-60"
+                  : audioActive
+                    ? "border-brand bg-brand-soft text-brand"
+                    : "border-border-strong bg-card text-ink hover:bg-hover"
               }`}
             >
               <HeadphonesIcon size={16} />
-              {listening ? "Listening to live audio…" : "Listen live"}
+              {ended
+                ? "Call ended"
+                : audioActive
+                  ? "Listening to live audio…"
+                  : "Listen live"}
             </button>
-            {listening && (
+            {audioActive && (
               <p className="text-center text-xs text-muted2">
                 Live audio is simulated in this preview.
+              </p>
+            )}
+            {ended && (
+              <p className="text-center text-xs text-muted2">
+                The transcript below is the final record of this call.
               </p>
             )}
           </div>
 
           {/* Live transcript */}
           <div className="flex min-h-0 flex-grow flex-col gap-1.5">
-            <div className="text-[13px] font-semibold">Live transcript</div>
+            <div className="text-[13px] font-semibold">
+              {ended ? "Transcript" : "Live transcript"}
+            </div>
             <div
               ref={scrollRef}
               className="flex min-h-0 flex-grow flex-col gap-2 overflow-y-auto rounded-xl border border-border bg-card p-4"
@@ -150,7 +194,7 @@ export function LiveCallModal() {
                       {l.who === "agent" ? call.agent : "Caller"}:
                     </span>
                     {l.text}
-                    {i === call.lines.length - 1 && (
+                    {!ended && i === call.lines.length - 1 && (
                       <span className="ml-0.5 inline-block h-3.5 w-0.5 animate-pulse bg-muted align-middle" />
                     )}
                   </span>
