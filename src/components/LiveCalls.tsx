@@ -19,9 +19,14 @@ export function VoiceWaves({
 }) {
   // Arc radii (inner → outer). Kept under 50 so scale(1.08) stays in viewBox.
   const radii = [16, 27, 38];
+  // Round to fixed precision so server/client produce byte-identical path
+  // strings (raw trig can differ in the last float digit → hydration mismatch).
   const pt = (r: number, deg: number) => {
     const rad = (deg * Math.PI) / 180;
-    return [50 + r * Math.cos(rad), 50 + r * Math.sin(rad)];
+    return [
+      Number((50 + r * Math.cos(rad)).toFixed(3)),
+      Number((50 + r * Math.sin(rad)).toFixed(3)),
+    ];
   };
   return (
     <svg
@@ -41,7 +46,6 @@ export function VoiceWaves({
           style: {
             transformBox: "view-box" as const,
             transformOrigin: "50px 50px",
-            opacity: active ? undefined : 0.4,
             animation: active
               ? `voice-wave ${1000 + i * 160}ms ease-in-out ${i * 150}ms infinite`
               : "none",
@@ -123,7 +127,7 @@ export function LiveCalls() {
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted">
                   <VoiceWaves
-                    active
+                    active={false}
                     size={22}
                     color={
                       agentSpeaking

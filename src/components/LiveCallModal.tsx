@@ -95,7 +95,8 @@ export function LiveCallModal() {
 
           {/* Speaker panel */}
           <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card py-7">
-            <VoiceWaves active size={88} color={speakerColor} />
+            {/* Ripples only while actually listening to the audio */}
+            <VoiceWaves active={listening} size={88} color={speakerColor} />
             <div className="text-sm font-medium">
               {agentSpeaking
                 ? `${call.agent} is speaking…`
