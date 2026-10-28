@@ -5,6 +5,7 @@ import { CloseIcon, MenuIcon, SearchIcon } from "./icons";
 import { ConnectionsPanel, Logo, NavLinks } from "./nav";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountPanel } from "./AccountPanel";
+import { LiveIndicator } from "./LiveIndicator";
 import { openCommandPalette } from "./CommandPalette";
 
 export default function TopBar() {
@@ -43,6 +44,7 @@ export default function TopBar() {
           <Logo />
         </div>
         <div className="flex items-center gap-2">
+          <LiveIndicator compact />
           <button
             type="button"
             aria-label="Search"

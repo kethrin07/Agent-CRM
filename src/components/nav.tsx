@@ -171,6 +171,12 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function ConnectionsPanel() {
+  const { role } = useRole();
+  // Local mounted flag so server + first client render match (admin-only).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || role !== "admin") return null;
+
   return (
     <div className="flex flex-col gap-2 rounded-[10px] border border-border p-3 text-xs text-muted2">
       <div className="text-xs font-semibold text-ink">Connections</div>

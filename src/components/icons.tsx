@@ -136,6 +136,16 @@ export function CheckIcon({ size = 13, ...props }: IconProps) {
   );
 }
 
+export function HeadphonesIcon({ size = 16, ...props }: IconProps) {
+  return (
+    <svg {...base(size, 1.8, props)}>
+      <path d="M3 14v-2a9 9 0 0 1 18 0v2" />
+      <path d="M21 16a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2z" />
+      <path d="M3 16a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z" />
+    </svg>
+  );
+}
+
 export function PhoneIcon({ size = 16, ...props }: IconProps) {
   return (
     <svg {...base(size, 1.8, props)}>

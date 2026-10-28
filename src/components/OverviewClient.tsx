@@ -4,6 +4,7 @@ import { useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { QualityDonut } from "@/components/QualityDonut";
+import { LiveCalls } from "@/components/LiveCalls";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import { StatusBadge } from "@/components/ui/Badge";
@@ -69,6 +70,9 @@ export function OverviewClient() {
           </select>
         </div>
       </div>
+
+      {/* Live calls happening now */}
+      <LiveCalls />
 
       {/* KPI cards */}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
