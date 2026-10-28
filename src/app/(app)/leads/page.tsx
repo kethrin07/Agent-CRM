@@ -7,13 +7,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLeadDrawer } from "@/components/LeadDrawer";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
-import { ScoreBar } from "@/components/ui/ScoreBar";
 import { useToast } from "@/components/ui/Toast";
 import { useLeads } from "@/lib/leads-store";
-import { useRole } from "@/lib/role";
 import {
   agentAccent,
-  statusStyle,
   teamById,
   totalCalls,
   type Lead,
@@ -56,13 +53,8 @@ export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
   const { open } = useLeadDrawer();
-  const { role } = useRole();
-  const isAdmin = role === "admin";
 
-  // Grid loses the 90px AI-score column for clients.
-  const cols = isAdmin
-    ? "minmax(190px,2fr) 110px 90px minmax(180px,2fr) 70px 100px 140px"
-    : "minmax(190px,2fr) 110px minmax(180px,2fr) 70px 100px 140px";
+  const cols = "minmax(190px,2fr) 110px minmax(180px,2fr) 70px 100px 140px";
 
   // Plain left-click opens the drawer; modifier/middle clicks deep-link as usual.
   const openDrawer = (e: MouseEvent<HTMLElement>, id: string) => {
@@ -97,7 +89,6 @@ export default function LeadsPage() {
       "Name",
       "Phone",
       "Status",
-      ...(isAdmin ? ["AI score"] : []),
       "Intent",
       "Length",
       "Agent",
@@ -111,7 +102,6 @@ export default function LeadsPage() {
         r.name,
         r.phone,
         r.status,
-        ...(isAdmin ? [r.score] : []),
         r.intent,
         r.dur,
         r.agent,
@@ -332,7 +322,6 @@ export default function LeadsPage() {
             >
               <SortHeader label="Lead" k="name" />
               <SortHeader label="Status" k="status" />
-              {isAdmin && <SortHeader label="AI score" k="score" />}
               <span>What they want</span>
               <SortHeader label="Length" k="dur" />
               <SortHeader label="Agent" k="agent" />
@@ -354,9 +343,6 @@ export default function LeadsPage() {
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
                   </span>
                   <StatusBadge status={r.status} />
-                  {isAdmin && (
-                    <ScoreBar score={r.score} color={statusStyle[r.status].bar} />
-                  )}
                   <span className="text-sub">{r.intent}</span>
                   <span className="font-mono text-sub">{r.dur}</span>
                   <span className="flex items-center gap-2 text-sub">
@@ -393,11 +379,6 @@ export default function LeadsPage() {
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1">
                     <StatusBadge status={r.status} />
-                    {isAdmin && (
-                      <span className="font-mono text-[11px] text-muted">
-                        AI {r.score}
-                      </span>
-                    )}
                   </div>
                 </div>
 
