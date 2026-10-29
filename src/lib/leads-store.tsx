@@ -15,6 +15,7 @@ type LifecycleMap = Record<string, Lifecycle>;
 
 const STORAGE_KEY = "mhq-pipeline-v1";
 const NOTES_KEY = "mhq-notes-v1";
+const IMPORTED_KEY = "mhq-imported-leads-v1";
 
 const seed: LifecycleMap = Object.fromEntries(
   baseLeads.map((l) => [l.id, { stage: l.stage, assigneeId: l.assigneeId }]),
@@ -26,6 +27,7 @@ type Store = {
   setAssignee: (id: string, assigneeId: string | null) => void;
   notes: Record<string, string>;
   setNote: (id: string, text: string) => void;
+  addLeads: (newLeads: Lead[]) => void;
 };
 
 const LeadsContext = createContext<Store | null>(null);
@@ -35,6 +37,9 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   // any saved changes from localStorage after mount.
   const [overrides, setOverrides] = useState<LifecycleMap>(seed);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  // Leads uploaded via CSV import. Empty on first render (server + client
+  // match); rehydrated from localStorage after mount, like overrides/notes.
+  const [imported, setImported] = useState<Lead[]>([]);
   // Gate writes until after we've loaded from localStorage, otherwise the
   // initial empty state would clobber saved data (esp. under dev StrictMode).
   const [hydrated, setHydrated] = useState(false);
@@ -45,6 +50,8 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
       if (raw) setOverrides((prev) => ({ ...prev, ...JSON.parse(raw) }));
       const rawNotes = localStorage.getItem(NOTES_KEY);
       if (rawNotes) setNotes(JSON.parse(rawNotes));
+      const rawImported = localStorage.getItem(IMPORTED_KEY);
+      if (rawImported) setImported(JSON.parse(rawImported));
     } catch {}
     setHydrated(true);
   }, []);
@@ -63,6 +70,13 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     } catch {}
   }, [notes, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(IMPORTED_KEY, JSON.stringify(imported));
+    } catch {}
+  }, [imported, hydrated]);
+
   const setStage = useCallback((id: string, stage: Stage) => {
     setOverrides((p) => ({ ...p, [id]: { ...p[id], stage } }));
   }, []);
@@ -75,14 +89,19 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     setNotes((p) => ({ ...p, [id]: text }));
   }, []);
 
+  const addLeads = useCallback((newLeads: Lead[]) => {
+    setImported((p) => [...newLeads, ...p]);
+  }, []);
+
   const leads = useMemo(
-    () => baseLeads.map((l) => ({ ...l, ...overrides[l.id] })),
-    [overrides],
+    () =>
+      [...baseLeads, ...imported].map((l) => ({ ...l, ...overrides[l.id] })),
+    [imported, overrides],
   );
 
   const value = useMemo<Store>(
-    () => ({ leads, setStage, setAssignee, notes, setNote }),
-    [leads, setStage, setAssignee, notes, setNote],
+    () => ({ leads, setStage, setAssignee, notes, setNote, addLeads }),
+    [leads, setStage, setAssignee, notes, setNote, addLeads],
   );
 
   return <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>;

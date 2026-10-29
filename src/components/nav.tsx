@@ -10,7 +10,7 @@ import { useRole } from "@/lib/role";
 export const navItems = [
   { href: "/", label: "Dashboard", Icon: GridIcon, adminOnly: false },
   { href: "/leads", label: "Leads & calls", Icon: UsersIcon, adminOnly: false },
-  { href: "/agents", label: "Agent performance", Icon: MicIcon, adminOnly: true },
+  { href: "/agents", label: "Agents", Icon: MicIcon, adminOnly: true },
 ] as const;
 
 /** Compact Ø monogram — kept for splash/login use. */

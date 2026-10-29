@@ -5,12 +5,15 @@ import Link from "next/link";
 import { SearchIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLeadDrawer } from "@/components/LeadDrawer";
+import { ImportLeadsDialog } from "@/components/ImportLeadsDialog";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { useLeads } from "@/lib/leads-store";
+import { useRole } from "@/lib/role";
 import {
   agentAccent,
+  clientName,
   teamById,
   totalCalls,
   type Lead,
@@ -53,6 +56,14 @@ export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
   const { open } = useLeadDrawer();
+  const { role } = useRole();
+
+  // Local mounted flag (not the shared provider one) so server + first client
+  // render match; the admin-only Import button appears after hydration.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isAdmin = mounted && role === "admin";
+  const [importOpen, setImportOpen] = useState(false);
 
   const cols = "minmax(190px,2fr) 110px minmax(180px,2fr) 70px 100px 140px";
 
@@ -222,9 +233,19 @@ export default function LeadsPage() {
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
+          {isAdmin && (
+            <Button variant="primary" onClick={() => setImportOpen(true)}>
+              Import leads
+            </Button>
+          )}
           <Button onClick={exportCsv}>Export CSV</Button>
         </div>
       </div>
+
+      <ImportLeadsDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
@@ -341,6 +362,11 @@ export default function LeadsPage() {
                   <span className="flex flex-col gap-0.5">
                     <span className="font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
+                    {r.clientId && (
+                      <span className="mt-0.5 w-fit rounded-full bg-hover px-1.5 py-0.5 text-[11px] font-medium text-muted">
+                        {clientName(r.clientId)}
+                      </span>
+                    )}
                   </span>
                   <StatusBadge status={r.status} />
                   <span className="text-sub">{r.intent}</span>
@@ -376,6 +402,11 @@ export default function LeadsPage() {
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
+                    {r.clientId && (
+                      <span className="mt-0.5 w-fit rounded-full bg-hover px-1.5 py-0.5 text-[11px] font-medium text-muted">
+                        {clientName(r.clientId)}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1">
                     <StatusBadge status={r.status} />

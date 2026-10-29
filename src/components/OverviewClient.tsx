@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { QualityDonut } from "@/components/QualityDonut";
 import { LiveCalls } from "@/components/LiveCalls";
+import { Select } from "@/components/ui/Select";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLeadDrawer } from "@/components/LeadDrawer";
+import { useLeads } from "@/lib/leads-store";
 import {
   callsPerDayByRange,
   chartTitle,
@@ -17,13 +19,18 @@ import {
   leadQualityByRange,
   rangeOptions,
   rangeSubtitle,
-  recentCalls,
   type RangeKey,
 } from "@/lib/data";
 
 export function OverviewClient() {
   const [range, setRange] = useState<RangeKey>("7d");
   const { open } = useLeadDrawer();
+  const { leads } = useLeads();
+
+  // Newest leads first, so freshly imported leads surface here too.
+  const recent = [...leads]
+    .sort((a, b) => b.ts.localeCompare(a.ts))
+    .slice(0, 5);
 
   const kpis = kpisByRange[range];
   const funnel = funnelByRange[range];
@@ -53,21 +60,19 @@ export function OverviewClient() {
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
-          <label className="sr-only" htmlFor="range">
-            Date range
-          </label>
-          <select
+          <Select
             id="range"
+            aria-label="Date range"
+            wrapperClassName="w-[160px]"
             value={range}
             onChange={(e) => setRange(e.target.value as RangeKey)}
-            className="min-h-10 rounded-lg border border-border-strong bg-card px-3 text-sm text-ink"
           >
             {rangeOptions.map((o) => (
               <option key={o.key} value={o.key}>
                 {o.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -225,7 +230,7 @@ export function OverviewClient() {
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
-            {recentCalls.map((r) => (
+            {recent.map((r) => (
               <Link
                 key={r.id}
                 href={`/leads/${r.id}`}
