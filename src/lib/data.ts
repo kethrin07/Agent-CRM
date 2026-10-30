@@ -453,6 +453,15 @@ export type Lead = {
   stage: Stage;
   assigneeId: string | null;
   clientId?: string | null; // set when the lead was imported for a client
+
+  // Enrichment from Supabase (real ElevenLabs calls); absent on mock/demo leads.
+  conversationId?: string | null;
+  summary?: string | null;
+  durationSecs?: number | null;
+  hasAudio?: boolean | null;
+  transcript?: { t: string; who: "agent" | "caller"; text: string }[] | null;
+  dataFields?: Record<string, { value?: unknown; rationale?: string }> | null;
+  qualification?: Record<string, { result?: string; rationale?: string }> | null;
 };
 
 const slug = (name: string, i: number) =>

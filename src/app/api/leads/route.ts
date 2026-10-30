@@ -19,7 +19,7 @@ export async function GET() {
     const { data, error } = await getSupabaseAdmin()
       .from(LEADS_TABLE)
       .select("*")
-      .order("when", { ascending: false });
+      .order("ts", { ascending: false });
     if (error) throw error;
     return NextResponse.json({ leads: data ?? [] });
   } catch (err) {

@@ -40,6 +40,9 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   // Leads uploaded via CSV import. Empty on first render (server + client
   // match); rehydrated from localStorage after mount, like overrides/notes.
   const [imported, setImported] = useState<Lead[]>([]);
+  // Base leads: start as the mock set (deterministic for SSR), then replaced
+  // with Supabase leads after mount when the backend is configured.
+  const [base, setBase] = useState<Lead[]>(baseLeads);
   // Gate writes until after we've loaded from localStorage, otherwise the
   // initial empty state would clobber saved data (esp. under dev StrictMode).
   const [hydrated, setHydrated] = useState(false);
@@ -77,6 +80,22 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     } catch {}
   }, [imported, hydrated]);
 
+  // Pull leads from Supabase when the backend is configured. A 200 (even with
+  // an empty list) means Supabase is the source of truth and replaces the mock
+  // base; anything else (501 not configured, network error) keeps the mock.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/leads")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.leads)) setBase(data.leads);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const setStage = useCallback((id: string, stage: Stage) => {
     setOverrides((p) => ({ ...p, [id]: { ...p[id], stage } }));
   }, []);
@@ -94,9 +113,8 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const leads = useMemo(
-    () =>
-      [...baseLeads, ...imported].map((l) => ({ ...l, ...overrides[l.id] })),
-    [imported, overrides],
+    () => [...base, ...imported].map((l) => ({ ...l, ...overrides[l.id] })),
+    [base, imported, overrides],
   );
 
   const value = useMemo<Store>(
