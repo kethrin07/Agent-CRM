@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { leads as baseLeads, type Lead, type Stage } from "./data";
+import { type Lead, type Stage } from "./data";
 
 type Lifecycle = { stage: Stage; assigneeId: string | null };
 type LifecycleMap = Record<string, Lifecycle>;
@@ -16,10 +16,6 @@ type LifecycleMap = Record<string, Lifecycle>;
 const STORAGE_KEY = "mhq-pipeline-v1";
 const NOTES_KEY = "mhq-notes-v1";
 const IMPORTED_KEY = "mhq-imported-leads-v1";
-
-const seed: LifecycleMap = Object.fromEntries(
-  baseLeads.map((l) => [l.id, { stage: l.stage, assigneeId: l.assigneeId }]),
-);
 
 type Store = {
   leads: Lead[];
@@ -35,14 +31,14 @@ const LeadsContext = createContext<Store | null>(null);
 export function LeadsStoreProvider({ children }: { children: React.ReactNode }) {
   // Deterministic seed on first render (server + client match), then rehydrate
   // any saved changes from localStorage after mount.
-  const [overrides, setOverrides] = useState<LifecycleMap>(seed);
+  const [overrides, setOverrides] = useState<LifecycleMap>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   // Leads uploaded via CSV import. Empty on first render (server + client
   // match); rehydrated from localStorage after mount, like overrides/notes.
   const [imported, setImported] = useState<Lead[]>([]);
-  // Base leads: start as the mock set (deterministic for SSR), then replaced
-  // with Supabase leads after mount when the backend is configured.
-  const [base, setBase] = useState<Lead[]>(baseLeads);
+  // Base leads come from Supabase. Empty until the fetch resolves after mount
+  // (deterministic empty for SSR, so no hydration mismatch).
+  const [base, setBase] = useState<Lead[]>([]);
   // Gate writes until after we've loaded from localStorage, otherwise the
   // initial empty state would clobber saved data (esp. under dev StrictMode).
   const [hydrated, setHydrated] = useState(false);
@@ -80,19 +76,27 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     } catch {}
   }, [imported, hydrated]);
 
-  // Pull leads from Supabase when the backend is configured. A 200 (even with
-  // an empty list) means Supabase is the source of truth and replaces the mock
-  // base; anything else (501 not configured, network error) keeps the mock.
+  // Pull leads from Supabase on mount, then poll every 15s so new calls appear
+  // without a manual reload. A 200 (even with an empty list) means Supabase is
+  // the source; anything else (501 not configured, network error) is ignored.
+  // Polling pauses while the tab is hidden to avoid wasted requests.
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/leads")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!cancelled && Array.isArray(data?.leads)) setBase(data.leads);
-      })
-      .catch(() => {});
+    const load = () => {
+      fetch("/api/leads")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (!cancelled && Array.isArray(data?.leads)) setBase(data.leads);
+        })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 15000);
     return () => {
       cancelled = true;
+      clearInterval(id);
     };
   }, []);
 

@@ -6,6 +6,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { MicIcon } from "@/components/icons";
 import { Select } from "@/components/ui/Select";
 import { useRole } from "@/lib/role";
+import { useLeads } from "@/lib/leads-store";
+import { agentMetricsFromLeads } from "@/lib/metrics";
 import {
   agents,
   agentAccent,
@@ -13,6 +15,7 @@ import {
   metricsFor,
   rangeOptions,
   rangeSubtitle,
+  type AgentMetrics,
   type RangeKey,
   type AgentMeta,
 } from "@/lib/data";
@@ -89,6 +92,7 @@ function StatusPill({ status }: { status: AgentMeta["status"] }) {
 export default function AgentsPage() {
   const { role, hydrated } = useRole();
   const router = useRouter();
+  const { leads } = useLeads();
 
   const [agentId, setAgentId] = useState(agents[0].id);
   const [clientId, setClientId] = useState("all");
@@ -126,7 +130,13 @@ export default function AgentsPage() {
     setClientId(next.scope === "general" ? "all" : next.clientId!);
   };
 
-  const m = metricsFor(agentId, effClientId, range);
+  // Live agents (e.g. Nora) read from real leads; the rest use mock metrics.
+  const resolveMetrics = (a: AgentMeta, cid: string): AgentMetrics =>
+    a.live
+      ? agentMetricsFromLeads(leads, a.name, cid, range)
+      : metricsFor(a.id, cid, range);
+
+  const m = resolveMetrics(agent, effClientId);
   const accent = accentFor(agent.name);
 
   const scopeLine =
@@ -153,11 +163,7 @@ export default function AgentsPage() {
 
   // A compact roster row; selects the agent on click.
   const RosterCard = ({ a }: { a: AgentMeta }) => {
-    const rm = metricsFor(
-      a.id,
-      a.scope === "general" ? "all" : a.clientId!,
-      range,
-    );
+    const rm = resolveMetrics(a, a.scope === "general" ? "all" : a.clientId!);
     const ra = accentFor(a.name);
     const selected = a.id === agentId;
     return (

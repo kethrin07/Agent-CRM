@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { CheckIcon, CloseIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LeadLifecycle } from "@/components/LeadLifecycle";
@@ -9,24 +10,9 @@ import { RecordingPlayer } from "@/components/RecordingPlayer";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLead } from "@/lib/leads-store";
 import { useRole } from "@/lib/role";
-import {
-  clientName,
-  leadFields,
-  qualificationChecks,
-  transcript as mockTranscript,
-} from "@/lib/data";
+import { clientName } from "@/lib/data";
 
 type Line = { t: string; who: "agent" | "caller"; text: string };
-
-// Demo transcript (tuple form) reused for the mock/demo leads.
-const mockLines: Line[] = mockTranscript.map(([t, who, text]) => ({
-  t,
-  who,
-  text,
-}));
-
-const mockVerdict =
-  "Linda owns a single-family home in Austin (78704), built in 1998 and worth about $450k. Her current policy renews in May and the price went up, so she is shopping around. She gave a working email and prefers a callback in the morning.";
 
 // Friendly labels for the agent's data-collection / evaluation keys.
 const FIELD_LABELS: Record<string, string> = {
@@ -53,11 +39,15 @@ export function LeadDetailView({
   const { role } = useRole();
   const isAdmin = role === "admin";
 
+  // Playback position (from the recording player) → transcript highlight.
+  const [audioTime, setAudioTime] = useState(0);
+  const seekRef = useRef<((t: number) => void) | null>(null);
+
   if (!lead) {
     return <div className="text-sm text-muted">Lead not found.</div>;
   }
 
-  // A real (Supabase/ElevenLabs) lead has a conversation id; demo leads don't.
+  // Real calls have a conversation id (CSV imports don't → no recording).
   const isReal = Boolean(lead.conversationId);
   const agentLabel = lead.agent === "Imported" ? "Agent" : lead.agent;
 
@@ -68,16 +58,24 @@ export function LeadDetailView({
     .join("")
     .toUpperCase();
 
-  // Transcript: real lines if present, else mock for demo leads, else empty.
+  // Transcript lines from the stored conversation (empty when none).
   const lines: Line[] =
-    lead.transcript && lead.transcript.length
-      ? lead.transcript
-      : isReal
-        ? []
-        : mockLines;
+    lead.transcript && lead.transcript.length ? lead.transcript : [];
   const transcriptText = lines
     .map((l) => `${l.t}  ${l.who === "agent" ? agentLabel : "Caller"}: ${l.text}`)
     .join("\n");
+
+  // Which transcript line is "now" for the current playback position.
+  const parseT = (t: string) => {
+    const [m, s] = t.split(":").map(Number);
+    return (m || 0) * 60 + (s || 0);
+  };
+  const lineStarts = lines.map((l) => parseT(l.t));
+  let activeIdx = -1;
+  for (let i = 0; i < lineStarts.length; i++) {
+    if (lineStarts[i] <= audioTime + 0.25) activeIdx = i;
+    else break;
+  }
 
   // Collected lead details from the agent's data-collection results.
   const realFields = lead.dataFields
@@ -85,7 +83,7 @@ export function LeadDetailView({
         .filter(([, f]) => f?.value != null && String(f.value).trim() !== "")
         .map(([k, f]) => ({ k: FIELD_LABELS[k] ?? prettify(k), v: fmtValue(f.value) }))
     : [];
-  const fields = isReal ? realFields : leadFields;
+  const fields = realFields;
 
   // Qualification checks from evaluation_criteria_results.
   const realChecks = lead.qualification
@@ -95,22 +93,19 @@ export function LeadDetailView({
       }))
     : [];
 
-  const summary = isReal ? lead.summary || "No summary available." : mockVerdict;
+  const summary = lead.summary || "No summary available.";
 
-  const callInfo = isReal
-    ? [
-        { k: "Conversation ID", v: lead.conversationId!, mono: true },
-        { k: "Call length", v: lead.dur },
-        { k: "Answered by", v: lead.agent },
-        ...(lead.clientId ? [{ k: "Client", v: clientName(lead.clientId) }] : []),
-        { k: "Saved to", v: "supabase.leads", mono: true },
-      ]
-    : [
-        { k: "Called number", v: "+1 (888) 555-0140", mono: true },
-        { k: "Conversation ID", v: "conv_8f2a91c4e7", mono: true },
-        { k: "Call success", v: "Success" },
-        { k: "Saved to", v: "supabase.leads", mono: true },
-      ];
+  // Show the recording player for real calls, unless the call has no audio.
+  const showPlayer = isReal && lead.hasAudio !== false;
+
+  const callInfo = [
+    ...(lead.conversationId
+      ? [{ k: "Conversation ID", v: lead.conversationId, mono: true }]
+      : []),
+    { k: "Call length", v: lead.dur },
+    { k: "Answered by", v: lead.agent },
+    ...(lead.clientId ? [{ k: "Client", v: clientName(lead.clientId) }] : []),
+  ];
 
   return (
     <>
@@ -164,48 +159,34 @@ export function LeadDetailView({
                 </div>
               </div>
               <p className="text-sm leading-relaxed text-sub">{summary}</p>
-              {isReal ? (
-                realChecks.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {realChecks.map((c) => (
-                      <div key={c.label} className="flex items-center gap-2.5 text-sm">
-                        <span
-                          className={`flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full ${
-                            c.pass
-                              ? "bg-good-bg text-good-fg"
-                              : "bg-bad-bg text-bad-fg"
-                          }`}
-                        >
-                          {c.pass ? <CheckIcon /> : <CloseIcon size={13} />}
-                        </span>
-                        <span className="flex-grow">{c.label}</span>
-                        <span
-                          className={`text-xs font-semibold ${
-                            c.pass ? "text-good-fg" : "text-bad-fg"
-                          }`}
-                        >
-                          {c.pass ? "Pass" : "No"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[13px] text-muted">
-                    No qualification criteria recorded for this call.
-                  </p>
-                )
-              ) : (
+              {realChecks.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {qualificationChecks.map((label) => (
-                    <div key={label} className="flex items-center gap-2.5 text-sm">
-                      <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-good-bg text-good-fg">
-                        <CheckIcon />
+                  {realChecks.map((c) => (
+                    <div key={c.label} className="flex items-center gap-2.5 text-sm">
+                      <span
+                        className={`flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full ${
+                          c.pass
+                            ? "bg-good-bg text-good-fg"
+                            : "bg-bad-bg text-bad-fg"
+                        }`}
+                      >
+                        {c.pass ? <CheckIcon /> : <CloseIcon size={13} />}
                       </span>
-                      <span className="flex-grow">{label}</span>
-                      <span className="text-xs font-semibold text-good-fg">Pass</span>
+                      <span className="flex-grow">{c.label}</span>
+                      <span
+                        className={`text-xs font-semibold ${
+                          c.pass ? "text-good-fg" : "text-bad-fg"
+                        }`}
+                      >
+                        {c.pass ? "Pass" : "No"}
+                      </span>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <p className="text-[13px] text-muted">
+                  No qualification criteria recorded for this call.
+                </p>
               )}
             </section>
           )}
@@ -254,20 +235,31 @@ export function LeadDetailView({
           <div className="flex flex-col gap-3.5 border-b border-hairline px-5 py-[18px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold">
-                {isReal ? "Transcript" : "Recording & transcript"}
+                {showPlayer ? "Recording & transcript" : "Transcript"}
               </h2>
               {lines.length > 0 && <CopyTranscriptButton text={transcriptText} />}
             </div>
-            {/* Audio playback isn't wired for real calls yet, so only the demo
-                leads show the player. */}
-            {!isReal && <RecordingPlayer />}
+            {showPlayer &&
+              (isReal ? (
+                <RecordingPlayer
+                  src={`/api/leads/${lead.conversationId}/audio`}
+                  total={lead.durationSecs ?? undefined}
+                  onTime={setAudioTime}
+                  seekRef={seekRef}
+                />
+              ) : (
+                <RecordingPlayer onTime={setAudioTime} seekRef={seekRef} />
+              ))}
           </div>
           <div className="flex flex-col px-5 pb-5 pt-2">
             {lines.length > 0 ? (
               lines.map((l, i) => (
                 <div
                   key={i}
-                  className="grid gap-3 border-b border-rowline py-3 text-sm leading-relaxed [grid-template-columns:44px_60px_minmax(0,1fr)]"
+                  onClick={() => seekRef.current?.(lineStarts[i])}
+                  className={`grid cursor-pointer gap-3 border-b border-rowline py-3 text-sm leading-relaxed transition-colors [grid-template-columns:44px_60px_minmax(0,1fr)] ${
+                    i === activeIdx ? "bg-brand-soft2" : "hover:bg-hover"
+                  }`}
                 >
                   <span className="pt-0.5 font-mono text-xs text-muted">{l.t}</span>
                   <span

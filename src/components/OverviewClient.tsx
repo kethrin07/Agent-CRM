@@ -1,44 +1,83 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { QualityDonut } from "@/components/QualityDonut";
-import { LiveCalls } from "@/components/LiveCalls";
+import { LiveNow } from "@/components/LiveNow";
 import { Select } from "@/components/ui/Select";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { TrendChip, sparkColor } from "@/components/ui/TrendChip";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLeadDrawer } from "@/components/LeadDrawer";
 import { useLeads } from "@/lib/leads-store";
-import {
-  callsPerDayByRange,
-  chartTitle,
-  funnelByRange,
-  kpisByRange,
-  leadQualityByRange,
-  rangeOptions,
-  rangeSubtitle,
-  type RangeKey,
-} from "@/lib/data";
+import { computeMetrics, emptyMetrics, rangeToWindow } from "@/lib/metrics";
+import { rangeOptions, rangeSubtitle, type RangeKey } from "@/lib/data";
+
+const toMs = (d: string, endOfDay = false) =>
+  new Date(`${d}T${endOfDay ? "23:59:59.999" : "00:00:00"}`).getTime();
+const fmtDate = (ms: number) =>
+  new Date(ms).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+const isoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
 
 export function OverviewClient() {
-  const [range, setRange] = useState<RangeKey>("7d");
+  const [range, setRange] = useState<RangeKey | "custom">("7d");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const { open } = useLeadDrawer();
   const { leads } = useLeads();
+
+  // Metrics depend on Date.now() (chart labels), so compute only after mount to
+  // keep SSR and first client render identical (no hydration mismatch).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Newest leads first, so freshly imported leads surface here too.
   const recent = [...leads]
     .sort((a, b) => b.ts.localeCompare(a.ts))
     .slice(0, 5);
 
-  const kpis = kpisByRange[range];
-  const funnel = funnelByRange[range];
-  const quality = leadQualityByRange[range];
-  const chart = callsPerDayByRange[range];
+  const win =
+    range === "custom"
+      ? {
+          start: from ? toMs(from) : Date.now() - 7 * 86_400_000,
+          end: to ? toMs(to, true) : Date.now(),
+        }
+      : rangeToWindow(range);
+
+  const { kpis, funnel, quality, chart, chartTitle } = mounted
+    ? computeMetrics(leads, win)
+    : emptyMetrics();
+
+  const rangeLabel =
+    range === "custom"
+      ? `from ${fmtDate(win.start)} to ${fmtDate(win.end)}`
+      : rangeSubtitle[range];
+
+  // Selecting "Custom" prefills the last 7 days so the pickers aren't empty.
+  const onRangeChange = (v: string) => {
+    const r = v as RangeKey | "custom";
+    if (r === "custom" && !from && !to) {
+      const now = new Date();
+      const wk = new Date(now);
+      wk.setDate(now.getDate() - 7);
+      setFrom(isoDate(wk));
+      setTo(isoDate(now));
+    }
+    setRange(r);
+  };
 
   const funnelTop = funnel[0].value;
-  const winRate = Math.round((funnel[funnel.length - 1].value / funnelTop) * 100);
+  const winRate = funnelTop
+    ? Math.round((funnel[funnel.length - 1].value / funnelTop) * 100)
+    : 0;
 
   const openDrawer = (e: MouseEvent<HTMLElement>, id: string) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
@@ -53,31 +92,53 @@ export function OverviewClient() {
         <div className="flex flex-col gap-1">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em]">Dashboard</h1>
           <div className="text-sm text-muted">
-            How Nora and Bob handled inbound calls {rangeSubtitle[range]}
+            How Nora and Bob handled inbound calls {rangeLabel}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="hidden shell:inline-flex">
             <ThemeToggle compact />
           </span>
+          {range === "custom" && (
+            <div className="flex min-h-11 items-center gap-2 rounded-lg border border-border-strong bg-card px-3 text-sm text-ink">
+              <input
+                type="date"
+                aria-label="From date"
+                value={from}
+                max={to || undefined}
+                onChange={(e) => setFrom(e.target.value)}
+                className="bg-transparent text-sm text-ink outline-none"
+              />
+              <span className="text-muted">–</span>
+              <input
+                type="date"
+                aria-label="To date"
+                value={to}
+                min={from || undefined}
+                onChange={(e) => setTo(e.target.value)}
+                className="bg-transparent text-sm text-ink outline-none"
+              />
+            </div>
+          )}
           <Select
             id="range"
             aria-label="Date range"
             wrapperClassName="w-[160px]"
             value={range}
-            onChange={(e) => setRange(e.target.value as RangeKey)}
+            onChange={(e) => onRangeChange(e.target.value)}
           >
             {rangeOptions.map((o) => (
               <option key={o.key} value={o.key}>
                 {o.label}
               </option>
             ))}
+            <option value="custom">Custom range</option>
           </Select>
         </div>
       </div>
 
-      {/* Live calls happening now */}
-      <LiveCalls />
+      {/* Live calls happening now (real, polled from ElevenLabs) */}
+      <LiveNow />
 
       {/* KPI cards */}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
@@ -112,7 +173,7 @@ export function OverviewClient() {
           <div className="flex flex-col gap-1">
             <h2 className="text-base font-semibold">Conversion funnel</h2>
             <div className="text-[13px] text-muted">
-              From inbound call to closed customer {rangeSubtitle[range]}
+              From inbound call to closed customer {rangeLabel}
             </div>
           </div>
           <div className="text-[13px] text-muted">
@@ -125,7 +186,9 @@ export function OverviewClient() {
           {funnel.map((f, i) => {
             const widthPct = (f.value / funnelTop) * 100;
             const conv =
-              i === 0 ? null : Math.round((f.value / funnel[i - 1].value) * 100);
+              i === 0 || !funnel[i - 1].value
+                ? null
+                : Math.round((f.value / funnel[i - 1].value) * 100);
             return (
               <div key={f.label} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-3 text-sm">
@@ -154,7 +217,7 @@ export function OverviewClient() {
         {/* Calls per day */}
         <section className="card flex flex-col gap-[18px] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">{chartTitle[range]}</h2>
+            <h2 className="text-base font-semibold">{chartTitle}</h2>
             <div className="flex gap-3.5 text-xs text-muted2">
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-brand" />

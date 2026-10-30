@@ -2,9 +2,8 @@ import { Suspense } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import { LeadsStoreProvider } from "@/lib/leads-store";
+import { LiveCallsProvider } from "@/lib/live-status";
 import { LeadDrawerProvider } from "@/components/LeadDrawer";
-import { LiveCallsProvider } from "@/lib/live-calls";
-import { LiveCallModal } from "@/components/LiveCallModal";
 import { CommandPalette } from "@/components/CommandPalette";
 import { RequireRole } from "@/components/RequireRole";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -19,7 +18,6 @@ export default function AppLayout({
         <LiveCallsProvider>
         <LeadDrawerProvider>
         <CommandPalette />
-        <LiveCallModal />
         <div className="flex min-h-screen bg-page text-ink">
         <Suspense
           fallback={

@@ -15,7 +15,6 @@ import {
   agentAccent,
   clientName,
   teamById,
-  totalCalls,
   type Lead,
   type Status,
 } from "@/lib/data";
@@ -463,7 +462,7 @@ export default function LeadsPage() {
               ? "No results"
               : `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, sorted.length)} of ${sorted.length}`}
             {filter === "All" && agent === "All agents" && !query.trim()
-              ? ` · ${totalCalls} calls total`
+              ? ` · ${leads.length.toLocaleString()} calls total`
               : ""}
           </span>
           <div className="flex items-center gap-2">

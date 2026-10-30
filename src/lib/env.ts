@@ -18,7 +18,8 @@ export const env = {
   elevenLabsWebhookSecret: process.env.ELEVENLABS_WEBHOOK_SECRET,
   elevenLabsAgentIdNora: process.env.ELEVENLABS_AGENT_ID_NORA,
   elevenLabsAgentIdBob: process.env.ELEVENLABS_AGENT_ID_BOB,
-  elevenLabsBaseUrl: process.env.ELEVENLABS_BASE_URL ?? "https://api.elevenlabs.io",
+  elevenLabsBaseUrl:
+    process.env.ELEVENLABS_BASE_URL || "https://api.elevenlabs.io",
 
   // Supabase
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,

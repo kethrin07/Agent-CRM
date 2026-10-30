@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLiveCalls } from "@/lib/live-calls";
+import { useLiveCalls } from "@/lib/live-status";
 
-export function LiveIndicator({ compact = false }: { compact?: boolean }) {
+/** Green "live call in progress" pill. Hidden when no call is active. */
+export function LiveBadge({ compact = false }: { compact?: boolean }) {
   const { calls } = useLiveCalls();
   const router = useRouter();
 
@@ -14,11 +15,11 @@ export function LiveIndicator({ compact = false }: { compact?: boolean }) {
     return (
       <button
         type="button"
-        aria-label={`${calls.length} live calls`}
+        aria-label={`${calls.length} live call${calls.length === 1 ? "" : "s"}`}
         onClick={go}
         className="flex h-10 items-center gap-1.5 rounded-lg border border-border-strong bg-card px-2.5 text-ink transition-colors hover:bg-hover"
       >
-        <span className="h-2 w-2 animate-pulse rounded-full bg-bad-bar" />
+        <span className="h-2 w-2 animate-pulse rounded-full bg-good" />
         <span className="font-mono text-xs font-semibold">{calls.length}</span>
       </button>
     );
@@ -30,9 +31,9 @@ export function LiveIndicator({ compact = false }: { compact?: boolean }) {
       onClick={go}
       className="flex items-center gap-2.5 rounded-lg border border-border-strong bg-card px-2.5 py-2 text-sm text-ink transition-colors hover:bg-hover"
     >
-      <span className="h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-bad-bar" />
+      <span className="h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-good" />
       <span className="flex-grow text-left font-medium">Live calls</span>
-      <span className="rounded-full bg-bad-bg px-1.5 py-0.5 text-[11px] font-semibold text-bad-fg">
+      <span className="rounded-full bg-good-bg px-1.5 py-0.5 text-[11px] font-semibold text-good-fg">
         {calls.length}
       </span>
     </button>
