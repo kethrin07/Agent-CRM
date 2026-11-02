@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/nav";
 import { GoogleIcon } from "@/components/icons";
 import { useRole, type Role } from "@/lib/role";
+import { clients } from "@/lib/data";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,12 +13,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState("");
+  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
 
   const notConnected = () =>
     setNotice("Sign-in isn’t connected yet — use Preview access below.");
 
-  const choose = (role: Role) => {
-    setRole(role);
+  const choose = (role: Role, cid?: string) => {
+    setRole(role, cid ?? null);
     router.push("/");
   };
 
@@ -99,24 +101,36 @@ export default function LoginPage() {
         )}
 
         {/* Preview access (no backend yet) */}
-        <div className="flex flex-col gap-2 border-t border-hairline pt-5">
+        <div className="flex flex-col gap-2.5 border-t border-hairline pt-5">
           <span className="text-center text-xs text-muted2">
             Preview access — backend not connected
           </span>
+          <button
+            type="button"
+            onClick={() => choose("admin")}
+            className="rounded-lg border border-border-strong bg-card px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-hover"
+          >
+            Continue as Admin
+          </button>
           <div className="flex gap-2">
+            <select
+              aria-label="Client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="min-w-0 flex-grow rounded-lg border border-border-strong bg-card px-3 text-sm text-ink outline-none focus:border-brand"
+            >
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
-              onClick={() => choose("admin")}
-              className="flex-grow rounded-lg border border-border-strong bg-card px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-hover"
+              onClick={() => choose("client", clientId)}
+              className="flex-shrink-0 rounded-lg border border-border-strong bg-card px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-hover"
             >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => choose("client")}
-              className="flex-grow rounded-lg border border-border-strong bg-card px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-hover"
-            >
-              Client
+              Continue as client
             </button>
           </div>
         </div>

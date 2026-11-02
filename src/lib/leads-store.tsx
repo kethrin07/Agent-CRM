@@ -9,13 +9,15 @@ import {
   useState,
 } from "react";
 import { type Lead, type Stage } from "./data";
+import { useRole } from "./role";
 
 type Lifecycle = { stage: Stage; assigneeId: string | null };
 type LifecycleMap = Record<string, Lifecycle>;
 
 const STORAGE_KEY = "mhq-pipeline-v1";
 const NOTES_KEY = "mhq-notes-v1";
-const IMPORTED_KEY = "mhq-imported-leads-v1";
+// Old CSV-import store; now migrated into Supabase on first load, then removed.
+const LEGACY_IMPORTED_KEY = "mhq-imported-leads-v1";
 
 type Store = {
   leads: Lead[];
@@ -23,34 +25,41 @@ type Store = {
   setAssignee: (id: string, assigneeId: string | null) => void;
   notes: Record<string, string>;
   setNote: (id: string, text: string) => void;
-  addLeads: (newLeads: Lead[]) => void;
+  refresh: () => void;
 };
 
 const LeadsContext = createContext<Store | null>(null);
 
 export function LeadsStoreProvider({ children }: { children: React.ReactNode }) {
-  // Deterministic seed on first render (server + client match), then rehydrate
-  // any saved changes from localStorage after mount.
+  // A client only sees their own tenant's leads; admins see everything.
+  const { role, clientId } = useRole();
+  // Pipeline (stage/assignee) + notes stay as a local overlay keyed by lead id.
   const [overrides, setOverrides] = useState<LifecycleMap>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
-  // Leads uploaded via CSV import. Empty on first render (server + client
-  // match); rehydrated from localStorage after mount, like overrides/notes.
-  const [imported, setImported] = useState<Lead[]>([]);
   // Base leads come from Supabase. Empty until the fetch resolves after mount
   // (deterministic empty for SSR, so no hydration mismatch).
   const [base, setBase] = useState<Lead[]>([]);
-  // Gate writes until after we've loaded from localStorage, otherwise the
-  // initial empty state would clobber saved data (esp. under dev StrictMode).
+  // Gate localStorage writes until after we've loaded, so the initial empty
+  // state can't clobber saved pipeline/notes data.
   const [hydrated, setHydrated] = useState(false);
 
+  // Fetch leads from Supabase (used by the poll and by refresh()).
+  const load = useCallback(() => {
+    fetch("/api/leads")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.leads)) setBase(data.leads);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load saved pipeline/notes from localStorage.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setOverrides((prev) => ({ ...prev, ...JSON.parse(raw) }));
       const rawNotes = localStorage.getItem(NOTES_KEY);
       if (rawNotes) setNotes(JSON.parse(rawNotes));
-      const rawImported = localStorage.getItem(IMPORTED_KEY);
-      if (rawImported) setImported(JSON.parse(rawImported));
     } catch {}
     setHydrated(true);
   }, []);
@@ -69,36 +78,48 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     } catch {}
   }, [notes, hydrated]);
 
+  // One-time migration: push any CSV imports still in localStorage into Supabase,
+  // then drop the local copy (imports now write straight to Supabase).
   useEffect(() => {
-    if (!hydrated) return;
+    let raw: string | null = null;
     try {
-      localStorage.setItem(IMPORTED_KEY, JSON.stringify(imported));
+      raw = localStorage.getItem(LEGACY_IMPORTED_KEY);
     } catch {}
-  }, [imported, hydrated]);
+    if (!raw) return;
+    let list: Lead[] = [];
+    try {
+      list = JSON.parse(raw);
+    } catch {}
+    if (!Array.isArray(list) || list.length === 0) {
+      try {
+        localStorage.removeItem(LEGACY_IMPORTED_KEY);
+      } catch {}
+      return;
+    }
+    fetch("/api/leads/import", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ leads: list }),
+    })
+      .then((r) => {
+        if (r.ok) {
+          try {
+            localStorage.removeItem(LEGACY_IMPORTED_KEY);
+          } catch {}
+          load();
+        }
+      })
+      .catch(() => {});
+  }, [load]);
 
-  // Pull leads from Supabase on mount, then poll every 15s so new calls appear
-  // without a manual reload. A 200 (even with an empty list) means Supabase is
-  // the source; anything else (501 not configured, network error) is ignored.
-  // Polling pauses while the tab is hidden to avoid wasted requests.
+  // Poll Supabase so new calls/imports appear without a reload; pause when hidden.
   useEffect(() => {
-    let cancelled = false;
-    const load = () => {
-      fetch("/api/leads")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (!cancelled && Array.isArray(data?.leads)) setBase(data.leads);
-        })
-        .catch(() => {});
-    };
     load();
     const id = setInterval(() => {
       if (document.visibilityState === "visible") load();
     }, 15000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+    return () => clearInterval(id);
+  }, [load]);
 
   const setStage = useCallback((id: string, stage: Stage) => {
     setOverrides((p) => ({ ...p, [id]: { ...p[id], stage } }));
@@ -112,18 +133,17 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
     setNotes((p) => ({ ...p, [id]: text }));
   }, []);
 
-  const addLeads = useCallback((newLeads: Lead[]) => {
-    setImported((p) => [...newLeads, ...p]);
-  }, []);
-
-  const leads = useMemo(
-    () => [...base, ...imported].map((l) => ({ ...l, ...overrides[l.id] })),
-    [base, imported, overrides],
-  );
+  const leads = useMemo(() => {
+    const merged = base.map((l) => ({ ...l, ...overrides[l.id] }));
+    // Client role → scope to their tenant's leads only.
+    return role === "client" && clientId
+      ? merged.filter((l) => l.clientId === clientId)
+      : merged;
+  }, [base, overrides, role, clientId]);
 
   const value = useMemo<Store>(
-    () => ({ leads, setStage, setAssignee, notes, setNote, addLeads }),
-    [leads, setStage, setAssignee, notes, setNote, addLeads],
+    () => ({ leads, setStage, setAssignee, notes, setNote, refresh: load }),
+    [leads, setStage, setAssignee, notes, setNote, load],
   );
 
   return <LeadsContext.Provider value={value}>{children}</LeadsContext.Provider>;

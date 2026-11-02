@@ -6,8 +6,18 @@ export type MapConfig = {
   agentIdNora?: string;
   agentIdBob?: string;
   defaultClientId?: string | null;
+  agentClientMap?: Record<string, string>; // agent_id → clientId (per-client tagging)
+  spreadClientIds?: string[]; // shared agent → distribute calls across these clients
   source: string; // 'call' | 'backfill' | 'import' | 'test'
 };
+
+// Stable hash → index, so a given conversation always maps to the same client
+// (spread is deterministic, not random per run).
+function hashIndex(s: string, mod: number): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return mod > 0 ? h % mod : 0;
+}
 
 export function toScore(raw?: number): number {
   if (raw == null) return 0;
@@ -118,7 +128,15 @@ export function mapConversationToRow(conv: any, cfg: MapConfig) {
     }),
     stage: "New",
     assigneeId: null,
-    clientId: cfg.defaultClientId ?? null,
+    // Client tag priority: explicit agent→client map → deterministic spread
+    // across shared-agent clients → default → none.
+    clientId:
+      cfg.agentClientMap?.[conv?.agent_id] ??
+      (cfg.spreadClientIds && cfg.spreadClientIds.length
+        ? cfg.spreadClientIds[hashIndex(conversationId, cfg.spreadClientIds.length)]
+        : undefined) ??
+      cfg.defaultClientId ??
+      null,
     conversationId,
     summary: analysis?.transcript_summary ?? null,
     durationSecs: metadata?.call_duration_secs ?? null,

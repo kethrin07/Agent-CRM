@@ -20,13 +20,14 @@ export function ImportLeadsDialog({
   open: boolean;
   onClose: () => void;
 }) {
-  const { addLeads } = useLeads();
+  const { refresh } = useLeads();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
   const [fileName, setFileName] = useState("");
   const [result, setResult] = useState<ParseResult | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // Reset the form each time the dialog opens.
   useEffect(() => {
@@ -83,12 +84,29 @@ export function ImportLeadsDialog({
     URL.revokeObjectURL(url);
   };
 
-  const doImport = () => {
-    if (!result || result.leads.length === 0) return;
-    addLeads(result.leads);
-    const n = result.leads.length;
-    toast(`Imported ${n} lead${n === 1 ? "" : "s"}`);
-    onClose();
+  const doImport = async () => {
+    if (!result || result.leads.length === 0 || importing) return;
+    setImporting(true);
+    try {
+      const res = await fetch("/api/leads/import", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ leads: result.leads }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Import failed", { variant: "error" });
+        return;
+      }
+      const n = result.leads.length;
+      toast(`Imported ${n} lead${n === 1 ? "" : "s"}`);
+      refresh();
+      onClose();
+    } catch {
+      toast("Import failed", { variant: "error" });
+    } finally {
+      setImporting(false);
+    }
   };
 
   const count = result?.leads.length ?? 0;
@@ -226,11 +244,17 @@ export function ImportLeadsDialog({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t border-hairline px-5 py-3.5">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={importing}>
             Cancel
           </Button>
-          <Button variant="primary" disabled={count === 0} onClick={doImport}>
-            Import {count > 0 ? count : ""} lead{count === 1 ? "" : "s"}
+          <Button
+            variant="primary"
+            disabled={count === 0 || importing}
+            onClick={doImport}
+          >
+            {importing
+              ? "Importing…"
+              : `Import ${count > 0 ? count : ""} lead${count === 1 ? "" : "s"}`}
           </Button>
         </div>
       </div>

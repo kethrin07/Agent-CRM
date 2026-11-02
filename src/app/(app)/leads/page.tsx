@@ -8,12 +8,15 @@ import { useLeadDrawer } from "@/components/LeadDrawer";
 import { ImportLeadsDialog } from "@/components/ImportLeadsDialog";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
+import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
 import { useLeads } from "@/lib/leads-store";
 import { useRole } from "@/lib/role";
 import {
   agentAccent,
   clientName,
+  clients,
+  isImportedLead,
   teamById,
   type Lead,
   type Status,
@@ -21,9 +24,24 @@ import {
 
 type StatusFilter = "All" | Status;
 type AgentFilter = "All agents" | "Nora" | "Bob";
+type SourceFilter = "All" | "AI calls" | "Imported";
 
 const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
 const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob"];
+const sourceFilters: SourceFilter[] = ["All", "AI calls", "Imported"];
+
+function SourcePill({ lead }: { lead: Lead }) {
+  const imp = isImportedLead(lead);
+  return (
+    <span
+      className={`w-fit rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+        imp ? "bg-neutral-bg text-neutral-fg" : "bg-brand-soft text-brand"
+      }`}
+    >
+      {imp ? "Imported" : "AI call"}
+    </span>
+  );
+}
 
 // `ts` is ISO; its date part ("YYYY-MM-DD") compares lexically against the
 // native <input type="date"> values. Empty bound = open-ended.
@@ -74,6 +92,8 @@ export default function LeadsPage() {
   };
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [agent, setAgent] = useState<AgentFilter>("All agents");
+  const [source, setSource] = useState<SourceFilter>("All");
+  const [clientFilter, setClientFilter] = useState("All");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [query, setQuery] = useState("");
@@ -89,9 +109,16 @@ export default function LeadsPage() {
     () =>
       leads.filter(
         (l) =>
-          (agent === "All agents" || l.agent === agent) && inRange(l, from, to),
+          (agent === "All agents" || l.agent === agent) &&
+          inRange(l, from, to) &&
+          (source === "All" ||
+            (source === "Imported" ? isImportedLead(l) : !isImportedLead(l))) &&
+          (clientFilter === "All" ||
+            (clientFilter === "none"
+              ? !l.clientId
+              : l.clientId === clientFilter)),
       ),
-    [agent, from, to, leads],
+    [agent, from, to, source, clientFilter, leads],
   );
 
   const exportCsv = () => {
@@ -169,7 +196,7 @@ export default function LeadsPage() {
   // Snap back to page 1 whenever the result set or ordering changes.
   useEffect(() => {
     setPage(1);
-  }, [filter, agent, from, to, query, sort]);
+  }, [filter, agent, source, clientFilter, from, to, query, sort]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -184,6 +211,8 @@ export default function LeadsPage() {
   const hasFilters =
     filter !== "All" ||
     agent !== "All agents" ||
+    source !== "All" ||
+    clientFilter !== "All" ||
     Boolean(from) ||
     Boolean(to) ||
     Boolean(query.trim());
@@ -191,6 +220,8 @@ export default function LeadsPage() {
   const clearFilters = () => {
     setFilter("All");
     setAgent("All agents");
+    setSource("All");
+    setClientFilter("All");
     setFrom("");
     setTo("");
     setQuery("");
@@ -294,6 +325,23 @@ export default function LeadsPage() {
           )}
         </div>
 
+        {isAdmin && (
+          <Select
+            aria-label="Filter by client"
+            wrapperClassName="w-[180px]"
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+          >
+            <option value="All">All clients</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+            <option value="none">Unassigned</option>
+          </Select>
+        )}
+
         <div
           role="group"
           aria-label="Filter by status"
@@ -329,6 +377,24 @@ export default function LeadsPage() {
             </button>
           ))}
         </div>
+
+        <div
+          role="group"
+          aria-label="Filter by source"
+          className="flex flex-wrap gap-1.5 border-l border-border-strong pl-1.5"
+        >
+          {sourceFilters.map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={s === source}
+              onClick={() => setSource(s)}
+              className={chipClass(s === source)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
@@ -361,11 +427,14 @@ export default function LeadsPage() {
                   <span className="flex flex-col gap-0.5">
                     <span className="font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
-                    {r.clientId && (
-                      <span className="mt-0.5 w-fit rounded-full bg-hover px-1.5 py-0.5 text-[11px] font-medium text-muted">
-                        {clientName(r.clientId)}
-                      </span>
-                    )}
+                    <span className="mt-0.5 flex flex-wrap items-center gap-1">
+                      <SourcePill lead={r} />
+                      {r.clientId && (
+                        <span className="rounded-full bg-hover px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                          {clientName(r.clientId)}
+                        </span>
+                      )}
+                    </span>
                   </span>
                   <StatusBadge status={r.status} />
                   <span className="text-sub">{r.intent}</span>
@@ -401,11 +470,14 @@ export default function LeadsPage() {
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate font-semibold">{r.name}</span>
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
-                    {r.clientId && (
-                      <span className="mt-0.5 w-fit rounded-full bg-hover px-1.5 py-0.5 text-[11px] font-medium text-muted">
-                        {clientName(r.clientId)}
-                      </span>
-                    )}
+                    <span className="mt-0.5 flex flex-wrap items-center gap-1">
+                      <SourcePill lead={r} />
+                      {r.clientId && (
+                        <span className="rounded-full bg-hover px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                          {clientName(r.clientId)}
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1">
                     <StatusBadge status={r.status} />

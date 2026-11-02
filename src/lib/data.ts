@@ -310,7 +310,12 @@ export type Lead = {
   transcript?: { t: string; who: "agent" | "caller"; text: string }[] | null;
   dataFields?: Record<string, { value?: unknown; rationale?: string }> | null;
   qualification?: Record<string, { result?: string; rationale?: string }> | null;
+  source?: "call" | "backfill" | "import" | null; // how the lead entered
 };
+
+/** True when a lead came from a CSV upload rather than an AI call. */
+export const isImportedLead = (l: Lead): boolean =>
+  l.source === "import" || l.agent === "Imported";
 
 // Decorative waveform shape for the recording player (visual only).
 export const waveform = Array.from({ length: 64 }, (_, i) => ({

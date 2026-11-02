@@ -12,8 +12,19 @@ export function parseCsv(text: string): string[][] {
   let row: string[] = [];
   let cell = "";
   let inQuotes = false;
-  // Normalise newlines so \r\n and \r behave like \n.
-  const s = text.replace(/\r\n?/g, "\n");
+  // Strip a leading UTF-8 BOM (Excel/Sheets add it) + normalise newlines.
+  const s = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+
+  // Auto-detect the delimiter from the first line, so files exported with
+  // semicolons (common in some locales) or tabs still parse.
+  const firstLine = s.split("\n", 1)[0] ?? "";
+  const countOf = (ch: string) => firstLine.split(ch).length - 1;
+  const delim =
+    countOf(";") > countOf(",") && countOf(";") >= countOf("\t")
+      ? ";"
+      : countOf("\t") > countOf(",")
+        ? "\t"
+        : ",";
 
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
@@ -30,7 +41,7 @@ export function parseCsv(text: string): string[][] {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ",") {
+    } else if (c === delim) {
       row.push(cell);
       cell = "";
     } else if (c === "\n") {
@@ -74,6 +85,18 @@ export type ParseResult = {
  * are skipped and reported; unknown enum values fall back to sane defaults.
  */
 export function parseLeadsCsv(text: string, clientId: string): ParseResult {
+  // .numbers / .xlsx files are zipped binaries (they start with "PK"), not text.
+  if (text.startsWith("PK") || text.includes("Document.iwa")) {
+    return {
+      leads: [],
+      skipped: 0,
+      errors: [
+        "This looks like a spreadsheet file (.numbers or .xlsx), not a CSV. " +
+          "In your spreadsheet app use File → Export (or Save As) → CSV, then upload that .csv file.",
+      ],
+    };
+  }
+
   const rows = parseCsv(text);
   const errors: string[] = [];
   if (rows.length < 2) {
@@ -102,7 +125,10 @@ export function parseLeadsCsv(text: string, clientId: string): ParseResult {
     return {
       leads: [],
       skipped: 0,
-      errors: ['Missing required columns: a "Name" and "Phone" header are required.'],
+      errors: [
+        `Missing required columns: a "Name" and "Phone" header are required. ` +
+          `Found: ${rows[0].join(", ") || "(none)"}.`,
+      ],
     };
   }
 

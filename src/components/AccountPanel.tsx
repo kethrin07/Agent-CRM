@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useRole } from "@/lib/role";
+import { clientName } from "@/lib/data";
 
 export function AccountPanel() {
-  const { role, logout } = useRole();
+  const { role, clientId, logout } = useRole();
   const router = useRouter();
 
   const signOut = () => {
@@ -12,7 +13,8 @@ export function AccountPanel() {
     router.replace("/login");
   };
 
-  const label = role === "admin" ? "Admin" : "Client";
+  const label =
+    role === "admin" ? "Admin" : clientId ? clientName(clientId) : "Client";
 
   return (
     <div className="flex items-center justify-between gap-2 rounded-[10px] border border-border p-3 text-xs">

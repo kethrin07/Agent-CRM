@@ -16,6 +16,18 @@ const BASE_URL = Deno.env.get("ELEVENLABS_BASE_URL") ?? "https://api.elevenlabs.
 const AGENT_ID_NORA = Deno.env.get("ELEVENLABS_AGENT_ID_NORA") ?? "";
 const AGENT_ID_BOB = Deno.env.get("ELEVENLABS_AGENT_ID_BOB") ?? "";
 const DEFAULT_CLIENT_ID = Deno.env.get("DEFAULT_CLIENT_ID") ?? null;
+// Optional JSON map of agent_id → clientId for per-client tagging.
+let AGENT_CLIENT_MAP: Record<string, string> = {};
+try {
+  AGENT_CLIENT_MAP = JSON.parse(Deno.env.get("AGENT_CLIENT_MAP") ?? "{}");
+} catch {
+  AGENT_CLIENT_MAP = {};
+}
+// Shared agent → spread calls across these clients (comma-separated).
+const SPREAD_CLIENT_IDS = (Deno.env.get("SPREAD_CLIENT_IDS") ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -69,6 +81,8 @@ Deno.serve(async () => {
           agentIdNora: AGENT_ID_NORA,
           agentIdBob: AGENT_ID_BOB,
           defaultClientId: DEFAULT_CLIENT_ID,
+          agentClientMap: AGENT_CLIENT_MAP,
+          spreadClientIds: SPREAD_CLIENT_IDS,
           source: "backfill",
         }),
       );
