@@ -17,6 +17,7 @@ import {
   clientName,
   clients,
   isImportedLead,
+  statusLabel,
   teamById,
   type Lead,
   type Status,
@@ -355,7 +356,7 @@ export default function LeadsPage() {
               onClick={() => setFilter(f)}
               className={chipClass(f === filter)}
             >
-              {f} · {countFor(f)}
+              {f === "All" ? "All" : statusLabel[f]} · {countFor(f)}
             </button>
           ))}
         </div>

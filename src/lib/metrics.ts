@@ -154,7 +154,7 @@ function buildChart(leads: Lead[], specs: Spec[]): CallBar[] {
   }));
 }
 
-const FUNNEL_LABELS = ["Inbound calls", "Real leads", "Contacted", "Quoted", "Converted"];
+const FUNNEL_LABELS = ["Inbound calls", "Qualified leads", "Contacted", "Quoted", "Converted"];
 const FUNNEL_COLORS = ["#C2D1EF", "#98B4EA", "#6588DE", "#3E65D2", "#2149BE"];
 
 export type DashboardMetrics = {
@@ -179,9 +179,9 @@ export function emptyMetrics(): DashboardMetrics {
   return {
     kpis: [
       kpi("inbound", "Inbound calls", "0", "vs previous period"),
-      kpi("real", "Real leads", "0", "0% of all calls"),
+      kpi("real", "Qualified leads", "0", "0% of all calls"),
       kpi("spam", "Spam or junk", "0", "Filtered before your team"),
-      kpi("avg", "Avg call length", "0m 00s", "Real leads only: 0m 00s"),
+      kpi("avg", "Avg call length", "0m 00s", "Qualified only: 0m 00s"),
     ],
     funnel: FUNNEL_LABELS.map((label, i) => ({
       label,
@@ -189,7 +189,7 @@ export function emptyMetrics(): DashboardMetrics {
       color: FUNNEL_COLORS[i],
     })),
     quality: [
-      { label: "Real lead", count: 0, pct: 0, color: "var(--color-good)" },
+      { label: "Qualified", count: 0, pct: 0, color: "var(--color-good)" },
       { label: "Unclear", count: 0, pct: 0, color: "var(--color-warn-bar)" },
       { label: "Spam", count: 0, pct: 0, color: "var(--color-bad-bar)" },
     ],
@@ -240,7 +240,7 @@ export function computeMetrics(
     },
     {
       id: "real",
-      label: "Real leads",
+      label: "Qualified leads",
       value: real.toLocaleString(),
       trend: trend(real, byStatus(prev, "Real")),
       sub: `${realPct}% of all calls`,
@@ -263,7 +263,7 @@ export function computeMetrics(
         label: prev.length ? `${avgDiff >= 0 ? "+" : ""}${avgDiff}s` : "New",
         tone: "neutral",
       },
-      sub: `Real leads only: ${fmtAvg(realAvgSec)}`,
+      sub: `Qualified only: ${fmtAvg(realAvgSec)}`,
       spark: spark(cur, start, span),
     },
   ];
@@ -287,7 +287,7 @@ export function computeMetrics(
     color,
   });
   const quality: QualitySlice[] = [
-    q("Real lead", real, "var(--color-good)"),
+    q("Qualified", real, "var(--color-good)"),
     q("Unclear", unclear, "var(--color-warn-bar)"),
     q("Spam", spam, "var(--color-bad-bar)"),
   ];

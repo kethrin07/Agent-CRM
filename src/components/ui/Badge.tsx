@@ -1,5 +1,11 @@
 import type { CSSProperties, ReactNode } from "react";
-import { stageMeta, statusStyle, type Stage, type Status } from "@/lib/data";
+import {
+  stageMeta,
+  statusLabel,
+  statusStyle,
+  type Stage,
+  type Status,
+} from "@/lib/data";
 
 export function Badge({
   children,
@@ -29,7 +35,9 @@ export function StatusBadge({
 }) {
   const s = statusStyle[status];
   return (
-    <Badge style={{ background: s.bg, color: s.fg }}>{label ?? status}</Badge>
+    <Badge style={{ background: s.bg, color: s.fg }}>
+      {label ?? statusLabel[status]}
+    </Badge>
   );
 }
 

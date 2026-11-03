@@ -221,7 +221,7 @@ export function OverviewClient() {
             <div className="flex gap-3.5 text-xs text-muted2">
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-brand" />
-                Real leads
+                Qualified
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-brand-bar-soft" />

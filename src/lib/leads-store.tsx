@@ -10,6 +10,11 @@ import {
 } from "react";
 import { type Lead, type Stage } from "./data";
 import { useRole } from "./role";
+import { getDemoLeads } from "./demo-data";
+
+// Demo mode: run on the built-in mock dataset instead of Supabase, so the same
+// codebase powers both the sales-demo site and the real site via one env flag.
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 type Lifecycle = { stage: Stage; assigneeId: string | null };
 type LifecycleMap = Record<string, Lifecycle>;
@@ -43,8 +48,13 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   // state can't clobber saved pipeline/notes data.
   const [hydrated, setHydrated] = useState(false);
 
-  // Fetch leads from Supabase (used by the poll and by refresh()).
+  // Fetch leads from Supabase (used by the poll and by refresh()). In demo mode
+  // the data comes from the static fixture, so there's nothing to fetch.
   const load = useCallback(() => {
+    if (DEMO_MODE) {
+      setBase(getDemoLeads());
+      return;
+    }
     fetch("/api/leads")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -81,6 +91,7 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
   // One-time migration: push any CSV imports still in localStorage into Supabase,
   // then drop the local copy (imports now write straight to Supabase).
   useEffect(() => {
+    if (DEMO_MODE) return;
     let raw: string | null = null;
     try {
       raw = localStorage.getItem(LEGACY_IMPORTED_KEY);
@@ -112,9 +123,11 @@ export function LeadsStoreProvider({ children }: { children: React.ReactNode }) 
       .catch(() => {});
   }, [load]);
 
-  // Poll Supabase so new calls/imports appear without a reload; pause when hidden.
+  // Load once, then poll Supabase so new calls/imports appear without a reload
+  // (pause when hidden). Demo mode is a static fixture — load once, no polling.
   useEffect(() => {
     load();
+    if (DEMO_MODE) return;
     const id = setInterval(() => {
       if (document.visibilityState === "visible") load();
     }, 15000);

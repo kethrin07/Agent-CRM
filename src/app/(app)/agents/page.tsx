@@ -146,7 +146,7 @@ export default function AgentsPage() {
 
   const tiles = [
     { label: "Calls handled", value: m.calls },
-    { label: "Real leads", value: m.real },
+    { label: "Qualified leads", value: m.real },
     { label: "Converted", value: m.converted },
   ];
 
@@ -306,7 +306,7 @@ export default function AgentsPage() {
         {/* Rates */}
         <div className="flex flex-col gap-3.5">
           <Metric
-            label="Real-lead rate"
+            label="Qualified rate"
             value={pct(m.real, m.calls)}
             color="var(--color-good)"
           />

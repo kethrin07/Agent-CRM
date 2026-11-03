@@ -4,6 +4,14 @@
 
 export type Status = "Real" | "Unclear" | "Spam";
 
+// Display labels for statuses. The stored value stays "Real" (don't break data /
+// filters), but it's shown as "Qualified" — a lead that didn't finish isn't fake.
+export const statusLabel: Record<Status, string> = {
+  Real: "Qualified",
+  Unclear: "Unclear",
+  Spam: "Spam",
+};
+
 // Colors reference CSS tokens (var(--…)) so they flip in dark mode.
 export const statusStyle: Record<
   Status,

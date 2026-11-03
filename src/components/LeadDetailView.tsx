@@ -10,7 +10,7 @@ import { RecordingPlayer } from "@/components/RecordingPlayer";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLead } from "@/lib/leads-store";
 import { useRole } from "@/lib/role";
-import { clientName } from "@/lib/data";
+import { clientName, statusLabel } from "@/lib/data";
 
 type Line = { t: string; who: "agent" | "caller"; text: string };
 
@@ -122,7 +122,9 @@ export function LeadDetailView({
               </h1>
               <StatusBadge
                 status={lead.status}
-                label={lead.status === "Real" ? "Real lead" : lead.status}
+                label={
+                  lead.status === "Real" ? "Qualified lead" : statusLabel[lead.status]
+                }
               />
             </div>
             <div className="text-sm text-muted">
