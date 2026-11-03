@@ -10,7 +10,7 @@ import { RecordingPlayer } from "@/components/RecordingPlayer";
 import { StatusBadge } from "@/components/ui/Badge";
 import { useLead } from "@/lib/leads-store";
 import { useRole } from "@/lib/role";
-import { clientName, statusLabel } from "@/lib/data";
+import { clientName, isMinutePlus, statusLabel } from "@/lib/data";
 
 type Line = { t: string; who: "agent" | "caller"; text: string };
 
@@ -126,6 +126,11 @@ export function LeadDetailView({
                   lead.status === "Real" ? "Qualified lead" : statusLabel[lead.status]
                 }
               />
+              {isMinutePlus(lead) && (
+                <span className="rounded-full bg-good-bg px-2 py-0.5 text-xs font-semibold text-good-fg">
+                  1 min+
+                </span>
+              )}
             </div>
             <div className="text-sm text-muted">
               Inbound call · {lead.when} · {lead.dur} · Answered by {lead.agent}

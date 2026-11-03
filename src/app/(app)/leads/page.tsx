@@ -17,6 +17,7 @@ import {
   clientName,
   clients,
   isImportedLead,
+  isMinutePlus,
   statusLabel,
   teamById,
   type Lead,
@@ -26,10 +27,12 @@ import {
 type StatusFilter = "All" | Status;
 type AgentFilter = "All agents" | "Nora" | "Bob";
 type SourceFilter = "All" | "AI calls" | "Imported";
+type LengthFilter = "Any length" | "1 min+" | "Under 1 min";
 
 const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
 const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob"];
 const sourceFilters: SourceFilter[] = ["All", "AI calls", "Imported"];
+const lengthFilters: LengthFilter[] = ["Any length", "1 min+", "Under 1 min"];
 
 function SourcePill({ lead }: { lead: Lead }) {
   const imp = isImportedLead(lead);
@@ -94,6 +97,7 @@ export default function LeadsPage() {
   const [filter, setFilter] = useState<StatusFilter>("All");
   const [agent, setAgent] = useState<AgentFilter>("All agents");
   const [source, setSource] = useState<SourceFilter>("All");
+  const [length, setLength] = useState<LengthFilter>("Any length");
   const [clientFilter, setClientFilter] = useState("All");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -114,12 +118,14 @@ export default function LeadsPage() {
           inRange(l, from, to) &&
           (source === "All" ||
             (source === "Imported" ? isImportedLead(l) : !isImportedLead(l))) &&
+          (length === "Any length" ||
+            (length === "1 min+" ? isMinutePlus(l) : !isMinutePlus(l))) &&
           (clientFilter === "All" ||
             (clientFilter === "none"
               ? !l.clientId
               : l.clientId === clientFilter)),
       ),
-    [agent, from, to, source, clientFilter, leads],
+    [agent, from, to, source, length, clientFilter, leads],
   );
 
   const exportCsv = () => {
@@ -197,7 +203,7 @@ export default function LeadsPage() {
   // Snap back to page 1 whenever the result set or ordering changes.
   useEffect(() => {
     setPage(1);
-  }, [filter, agent, source, clientFilter, from, to, query, sort]);
+  }, [filter, agent, source, length, clientFilter, from, to, query, sort]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) =>
@@ -213,6 +219,7 @@ export default function LeadsPage() {
     filter !== "All" ||
     agent !== "All agents" ||
     source !== "All" ||
+    length !== "Any length" ||
     clientFilter !== "All" ||
     Boolean(from) ||
     Boolean(to) ||
@@ -222,6 +229,7 @@ export default function LeadsPage() {
     setFilter("All");
     setAgent("All agents");
     setSource("All");
+    setLength("Any length");
     setClientFilter("All");
     setFrom("");
     setTo("");
@@ -396,6 +404,24 @@ export default function LeadsPage() {
             </button>
           ))}
         </div>
+
+        <div
+          role="group"
+          aria-label="Filter by call length"
+          className="flex flex-wrap gap-1.5 border-l border-border-strong pl-1.5"
+        >
+          {lengthFilters.map((l) => (
+            <button
+              key={l}
+              type="button"
+              aria-pressed={l === length}
+              onClick={() => setLength(l)}
+              className={chipClass(l === length)}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
@@ -430,6 +456,11 @@ export default function LeadsPage() {
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
                     <span className="mt-0.5 flex flex-wrap items-center gap-1">
                       <SourcePill lead={r} />
+                      {isMinutePlus(r) && (
+                        <span className="rounded-full bg-good-bg px-1.5 py-0.5 text-[10px] font-semibold text-good-fg">
+                          1 min+
+                        </span>
+                      )}
                       {r.clientId && (
                         <span className="rounded-full bg-hover px-1.5 py-0.5 text-[10px] font-medium text-muted">
                           {clientName(r.clientId)}
@@ -473,6 +504,11 @@ export default function LeadsPage() {
                     <span className="font-mono text-xs text-muted">{r.phone}</span>
                     <span className="mt-0.5 flex flex-wrap items-center gap-1">
                       <SourcePill lead={r} />
+                      {isMinutePlus(r) && (
+                        <span className="rounded-full bg-good-bg px-1.5 py-0.5 text-[10px] font-semibold text-good-fg">
+                          1 min+
+                        </span>
+                      )}
                       {r.clientId && (
                         <span className="rounded-full bg-hover px-1.5 py-0.5 text-[10px] font-medium text-muted">
                           {clientName(r.clientId)}

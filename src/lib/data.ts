@@ -325,6 +325,16 @@ export type Lead = {
 export const isImportedLead = (l: Lead): boolean =>
   l.source === "import" || l.agent === "Imported";
 
+/** Call length in seconds (from durationSecs, else parsed from "m:ss"). */
+export const callDurationSecs = (l: Lead): number => {
+  if (typeof l.durationSecs === "number") return l.durationSecs;
+  const [m, s] = (l.dur || "0:0").split(":").map(Number);
+  return (m || 0) * 60 + (s || 0);
+};
+
+/** True when the call lasted at least a minute. */
+export const isMinutePlus = (l: Lead): boolean => callDurationSecs(l) >= 60;
+
 // Decorative waveform shape for the recording player (visual only).
 export const waveform = Array.from({ length: 64 }, (_, i) => ({
   h: 8 + Math.round(Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.45)) * 28),

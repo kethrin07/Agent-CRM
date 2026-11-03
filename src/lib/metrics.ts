@@ -181,6 +181,7 @@ export function emptyMetrics(): DashboardMetrics {
       kpi("inbound", "Inbound calls", "0", "vs previous period"),
       kpi("real", "Qualified leads", "0", "0% of all calls"),
       kpi("spam", "Spam or junk", "0", "Filtered before your team"),
+      kpi("minplus", "Calls ≥ 1 min", "0", "0% of calls"),
       kpi("avg", "Avg call length", "0m 00s", "Qualified only: 0m 00s"),
     ],
     funnel: FUNNEL_LABELS.map((label, i) => ({
@@ -229,6 +230,9 @@ export function computeMetrics(
     : 0;
   const avgDiff = Math.round(avgSec - prevAvg);
 
+  const minutePlus = cur.filter((l) => durSecs(l) >= 60);
+  const minutePct = inbound ? Math.round((minutePlus.length / inbound) * 100) : 0;
+
   const kpis: Kpi[] = [
     {
       id: "inbound",
@@ -253,6 +257,14 @@ export function computeMetrics(
       trend: trend(spam, byStatus(prev, "Spam"), true),
       sub: "Filtered before your team",
       spark: spark(cur.filter((l) => l.status === "Spam"), start, span),
+    },
+    {
+      id: "minplus",
+      label: "Calls ≥ 1 min",
+      value: minutePlus.length.toLocaleString(),
+      trend: trend(minutePlus.length, prev.filter((l) => durSecs(l) >= 60).length),
+      sub: `${minutePct}% of calls`,
+      spark: spark(minutePlus, start, span),
     },
     {
       id: "avg",

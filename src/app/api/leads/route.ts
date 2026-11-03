@@ -20,12 +20,24 @@ export async function GET() {
       .from(LEADS_TABLE)
       .select("*")
       .order("ts", { ascending: false });
-    if (error) throw error;
+    if (error) {
+      // Surface the real Supabase error (message/code/hint) for debugging.
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        },
+        { status: 502 },
+      );
+    }
     return NextResponse.json({ leads: data ?? [] });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Query failed" },
-      { status: 502 },
-    );
+    const message =
+      err instanceof Error
+        ? err.message
+        : ((err as { message?: string })?.message ?? "Query failed");
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }
