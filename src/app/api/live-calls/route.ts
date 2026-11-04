@@ -1,4 +1,4 @@
-import { env, isConfigured } from "@/lib/env";
+import { agentNameMap, env, isConfigured } from "@/lib/env";
 import { listConversations } from "@/lib/integrations/elevenlabs";
 
 /**
@@ -37,7 +37,8 @@ export async function GET(req: Request) {
           m.start_time_unix_secs ??
           (c as { start_time_unix_secs?: number }).start_time_unix_secs;
         const agent =
-          c.agent_id && c.agent_id === env.elevenLabsAgentIdBob ? "Bob" : "Nora";
+          (c.agent_id && agentNameMap[c.agent_id]) ||
+          (c.agent_id && c.agent_id === env.elevenLabsAgentIdBob ? "Bob" : "Nora");
         return {
           id: c.conversation_id,
           agent,

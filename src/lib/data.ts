@@ -37,6 +37,7 @@ export const statusStyle: Record<
 export const agentAccent: Record<string, { bg: string; fg: string }> = {
   Nora: { bg: "var(--color-nora-bg)", fg: "var(--color-nora-fg)" },
   Bob: { bg: "var(--color-bob-bg)", fg: "var(--color-bob-fg)" },
+  Alex: { bg: "var(--color-teal-bg)", fg: "var(--color-teal-fg)" },
   Imported: { bg: "var(--color-neutral-bg)", fg: "var(--color-neutral-fg)" },
 };
 
@@ -197,7 +198,8 @@ export type AgentMeta = {
 
 export const agents: AgentMeta[] = [
   { id: "nora", name: "Nora", initial: "N", role: "Main line", scope: "general", clientId: null, servedClientIds: ["acme", "bluebird"], status: "active", number: "+1 (888) 555-0140", live: true },
-  { id: "bob", name: "Bob", initial: "B", role: "Overflow & after-hours", scope: "general", clientId: null, servedClientIds: ["acme", "bluebird"], status: "active", number: "+1 (888) 555-0177" },
+  { id: "bob", name: "Bob", initial: "B", role: "Overflow & after-hours", scope: "general", clientId: null, servedClientIds: ["acme", "bluebird"], status: "active", number: "+1 (888) 555-0177", live: true },
+  { id: "alex", name: "Alex", initial: "A", role: "Commercial line", scope: "general", clientId: null, servedClientIds: ["acme", "bluebird"], status: "active", number: "+1 (888) 555-0188", live: true },
   { id: "ava", name: "Ava", initial: "A", role: "Acme main line", scope: "client", clientId: "acme", servedClientIds: ["acme"], status: "active", number: "+1 (888) 555-0201" },
   { id: "max", name: "Max", initial: "M", role: "Bluebird quotes line", scope: "client", clientId: "bluebird", servedClientIds: ["bluebird"], status: "paused", number: "+1 (888) 555-0233" },
   { id: "zoe", name: "Zoe", initial: "Z", role: "Bluebird after-hours", scope: "client", clientId: "bluebird", servedClientIds: ["bluebird"], status: "active", number: "+1 (888) 555-0234" },
@@ -303,7 +305,7 @@ export type Lead = {
   score: number;
   intent: string;
   dur: string;
-  agent: "Nora" | "Bob" | "Imported"; // "Imported" = uploaded, not a voice call
+  agent: "Nora" | "Bob" | "Alex" | "Imported"; // "Imported" = uploaded, not a voice call
   ts: string; // ISO timestamp (sortable + for date-range filtering)
   when: string; // human display
   stage: Stage;

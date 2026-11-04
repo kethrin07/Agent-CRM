@@ -31,6 +31,16 @@ export const env = {
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
 } as const;
 
+// agent_id → display name (same JSON as the Edge function's AGENT_NAME_MAP).
+// Lets the live-call indicator label agents beyond Nora/Bob.
+export const agentNameMap: Record<string, string> = (() => {
+  try {
+    return JSON.parse(process.env.AGENT_NAME_MAP ?? "{}");
+  } catch {
+    return {};
+  }
+})();
+
 export type Service = "elevenlabs" | "supabase" | "twilio";
 
 /** True when the minimum env for a service is present. */

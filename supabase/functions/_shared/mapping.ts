@@ -5,6 +5,7 @@
 export type MapConfig = {
   agentIdNora?: string;
   agentIdBob?: string;
+  agentNameMap?: Record<string, string>; // agent_id → display name (Nora/Bob/Vera/…)
   defaultClientId?: string | null;
   agentClientMap?: Record<string, string>; // agent_id → clientId (per-client tagging)
   spreadClientIds?: string[]; // shared agent → distribute calls across these clients
@@ -66,12 +67,11 @@ function deriveStatus(conv: any, analysis: any): "Real" | "Unclear" | "Spam" {
   return "Unclear";
 }
 
-function agentName(
-  agentId: string | undefined,
-  cfg: MapConfig,
-): "Nora" | "Bob" | "Imported" {
+function agentName(agentId: string | undefined, cfg: MapConfig): string {
+  // Prefer the explicit agent_id → name map (scales to any number of agents).
+  if (agentId && cfg.agentNameMap?.[agentId]) return cfg.agentNameMap[agentId];
   if (agentId && cfg.agentIdBob && agentId === cfg.agentIdBob) return "Bob";
-  return "Nora"; // single-agent setup → default
+  return "Nora"; // default
 }
 
 // deno-lint-ignore no-explicit-any

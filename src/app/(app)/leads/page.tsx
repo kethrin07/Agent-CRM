@@ -25,12 +25,12 @@ import {
 } from "@/lib/data";
 
 type StatusFilter = "All" | Status;
-type AgentFilter = "All agents" | "Nora" | "Bob";
+type AgentFilter = "All agents" | "Nora" | "Bob" | "Alex";
 type SourceFilter = "All" | "AI calls" | "Imported";
 type LengthFilter = "Any length" | "1 min+" | "Under 1 min";
 
 const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
-const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob"];
+const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob", "Alex"];
 const sourceFilters: SourceFilter[] = ["All", "AI calls", "Imported"];
 const lengthFilters: LengthFilter[] = ["Any length", "1 min+", "Under 1 min"];
 

@@ -23,6 +23,13 @@ try {
 } catch {
   AGENT_CLIENT_MAP = {};
 }
+// Optional JSON map of agent_id → display name (Nora/Bob/Vera/…).
+let AGENT_NAME_MAP: Record<string, string> = {};
+try {
+  AGENT_NAME_MAP = JSON.parse(Deno.env.get("AGENT_NAME_MAP") ?? "{}");
+} catch {
+  AGENT_NAME_MAP = {};
+}
 // Shared agent → spread calls across these clients (comma-separated).
 const SPREAD_CLIENT_IDS = (Deno.env.get("SPREAD_CLIENT_IDS") ?? "")
   .split(",")
@@ -80,6 +87,7 @@ Deno.serve(async () => {
         mapConversationToRow(conv, {
           agentIdNora: AGENT_ID_NORA,
           agentIdBob: AGENT_ID_BOB,
+          agentNameMap: AGENT_NAME_MAP,
           defaultClientId: DEFAULT_CLIENT_ID,
           agentClientMap: AGENT_CLIENT_MAP,
           spreadClientIds: SPREAD_CLIENT_IDS,
