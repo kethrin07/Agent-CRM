@@ -29,20 +29,51 @@ const accentFor = (name: string) => agentAccent[name] ?? neutralAccent;
 
 const pct = (n: number, d: number) => (d ? Math.round((n / d) * 100) : 0);
 
+// Small green/red "+N" chip showing this agent's lead over the other. `invert`
+// = a lower number is better (spam filtered).
+function DeltaChip({
+  d,
+  unit = "",
+  invert = false,
+}: {
+  d?: number;
+  unit?: string;
+  invert?: boolean;
+}) {
+  if (d === undefined || d === 0) return null;
+  const good = invert ? d < 0 : d > 0;
+  return (
+    <span
+      className={`text-[11px] font-semibold ${good ? "text-good-fg" : "text-bad-fg"}`}
+    >
+      {d > 0 ? "+" : ""}
+      {d}
+      {unit}
+    </span>
+  );
+}
+
 function Metric({
   label,
   value,
   color,
+  delta,
+  invert,
 }: {
   label: string;
   value: number;
   color: string;
+  delta?: number;
+  invert?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between text-sm">
         <span className="text-sub">{label}</span>
-        <span className="font-mono text-muted">{value}%</span>
+        <span className="flex items-center gap-1.5">
+          <DeltaChip d={delta} unit=" pts" invert={invert} />
+          <span className="font-mono text-muted">{value}%</span>
+        </span>
       </div>
       <div className="h-2 rounded bg-track">
         <div
@@ -89,6 +120,92 @@ function StatusPill({ status }: { status: AgentMeta["status"] }) {
   );
 }
 
+// One agent's performance card. Pass `other` (the compared agent's metrics) to
+// show +/- deltas on every number.
+function MetricCard({
+  agent,
+  m,
+  scopeLine,
+  other,
+}: {
+  agent: AgentMeta;
+  m: AgentMetrics;
+  scopeLine: string;
+  other?: AgentMetrics;
+}) {
+  const accent = accentFor(agent.name);
+  const tiles = [
+    { label: "Calls handled", value: m.calls, delta: other && m.calls - other.calls },
+    { label: "Qualified leads", value: m.real, delta: other && m.real - other.real },
+    { label: "Converted", value: m.converted, delta: other && m.converted - other.converted },
+  ];
+  const qual = pct(m.real, m.calls);
+  const spam = pct(m.spam, m.calls);
+  const conv = pct(m.converted, m.real);
+  return (
+    <section className="card flex flex-col gap-5 p-5 sm:p-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <span
+          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-semibold"
+          style={{ background: accent.bg, color: accent.fg }}
+        >
+          {agent.initial}
+        </span>
+        <div className="flex flex-col">
+          <span className="text-lg font-semibold">{agent.name}</span>
+          <span className="text-[13px] text-muted">
+            {agent.role} · {scopeLine}
+          </span>
+        </div>
+        <span className="ml-auto">
+          <StatusPill status={agent.status} />
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {tiles.map((t) => (
+          <div key={t.label} className="flex flex-col gap-1 rounded-xl bg-hover p-3">
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-[22px] font-semibold leading-none tracking-[-0.02em]">
+                {t.value.toLocaleString()}
+              </span>
+              <DeltaChip d={t.delta || undefined} />
+            </span>
+            <span className="text-xs text-muted">{t.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3.5">
+        <Metric
+          label="Qualified rate"
+          value={qual}
+          color="var(--color-good)"
+          delta={other ? qual - pct(other.real, other.calls) : undefined}
+        />
+        <Metric
+          label="No engagement"
+          value={spam}
+          color="var(--color-bad-bar)"
+          delta={other ? spam - pct(other.spam, other.calls) : undefined}
+          invert
+        />
+        <Metric
+          label="Conversion rate"
+          value={conv}
+          color="var(--color-brand)"
+          delta={other ? conv - pct(other.converted, other.real) : undefined}
+        />
+      </div>
+
+      <div className="flex items-center justify-between border-t border-hairline pt-3.5 text-sm">
+        <span className="text-muted">Avg call length</span>
+        <span className="font-mono font-medium">{m.avgLen}</span>
+      </div>
+    </section>
+  );
+}
+
 export default function AgentsPage() {
   const { role, hydrated } = useRole();
   const router = useRouter();
@@ -97,6 +214,8 @@ export default function AgentsPage() {
   const [agentId, setAgentId] = useState(agents[0].id);
   const [clientId, setClientId] = useState("all");
   const [range, setRange] = useState<RangeKey>("7d");
+  const [compare, setCompare] = useState(false);
+  const [agentIdB, setAgentIdB] = useState(agents[1]?.id ?? agents[0].id);
 
   useEffect(() => {
     if (hydrated && role !== "admin") router.replace("/");
@@ -136,19 +255,31 @@ export default function AgentsPage() {
       ? agentMetricsFromLeads(leads, a.name, cid, range)
       : metricsFor(a.id, cid, range);
 
-  const m = resolveMetrics(agent, effClientId);
-  const accent = accentFor(agent.name);
+  // An agent's own client scope (general → all clients; dedicated → its client).
+  const ownCid = (a: AgentMeta) =>
+    a.scope === "general" ? "all" : a.clientId!;
+  const scopeLineFor = (a: AgentMeta, cid: string) =>
+    a.scope === "general"
+      ? `General · ${cid === "all" ? "All clients" : clientName(cid)}`
+      : clientName(a.clientId!);
 
-  const scopeLine =
-    agent.scope === "general"
-      ? `General · ${effClientId === "all" ? "All clients" : clientName(effClientId)}`
-      : clientName(agent.clientId!);
+  // In compare mode both agents use their all-clients totals (apples-to-apples).
+  const cidA = compare ? ownCid(agent) : effClientId;
+  const m = resolveMetrics(agent, cidA);
+  const scopeLine = scopeLineFor(agent, cidA);
 
-  const tiles = [
-    { label: "Calls handled", value: m.calls },
-    { label: "Qualified leads", value: m.real },
-    { label: "Converted", value: m.converted },
-  ];
+  const agentB = agents.find((a) => a.id === agentIdB) ?? agents[0];
+  const mB = resolveMetrics(agentB, ownCid(agentB));
+  const scopeLineB = scopeLineFor(agentB, ownCid(agentB));
+
+  // One-line headline: who leads on qualified rate.
+  const qA = pct(m.real, m.calls);
+  const qB = pct(mB.real, mB.calls);
+  const qDiff = qA - qB;
+  const compareSummary =
+    qDiff === 0
+      ? `${agent.name} and ${agentB.name} have the same qualified rate`
+      : `${qDiff > 0 ? agent.name : agentB.name} leads qualified rate by ${Math.abs(qDiff)} pts`;
 
   const generalAgents = agents.filter((a) => a.scope === "general");
   const clientGroups = Array.from(
@@ -215,9 +346,23 @@ export default function AgentsPage() {
             </div>
           </div>
         </div>
-        <span className="hidden shell:inline-flex">
-          <ThemeToggle compact />
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={compare}
+            onClick={() => setCompare((c) => !c)}
+            className={`min-h-10 rounded-lg border px-3 text-sm font-medium transition-colors ${
+              compare
+                ? "border-brand bg-brand-soft text-brand"
+                : "border-border-strong bg-card text-ink hover:bg-hover"
+            }`}
+          >
+            {compare ? "Exit compare" : "Compare"}
+          </button>
+          <span className="hidden shell:inline-flex">
+            <ThemeToggle compact />
+          </span>
+        </div>
       </div>
 
       {/* Control bar */}
@@ -237,20 +382,37 @@ export default function AgentsPage() {
           </Select>
         </Field>
 
-        <Field label="Client" htmlFor="client">
-          <Select
-            id="client"
-            value={effClientId}
-            disabled={agent.scope === "client"}
-            onChange={(e) => setClientId(e.target.value)}
-          >
-            {clientOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {compare ? (
+          <Field label="Compare with" htmlFor="agentB">
+            <Select
+              id="agentB"
+              value={agentIdB}
+              onChange={(e) => setAgentIdB(e.target.value)}
+            >
+              {agents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ·{" "}
+                  {a.scope === "general" ? "General" : clientName(a.clientId!)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : (
+          <Field label="Client" htmlFor="client">
+            <Select
+              id="client"
+              value={effClientId}
+              disabled={agent.scope === "client"}
+              onChange={(e) => setClientId(e.target.value)}
+            >
+              {clientOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
 
         <Field label="Date range" htmlFor="range">
           <Select
@@ -267,67 +429,23 @@ export default function AgentsPage() {
         </Field>
       </div>
 
-      {/* Metrics panel */}
-      <section className="card flex flex-col gap-5 p-5 sm:p-6">
-        {/* Identity */}
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-lg font-semibold"
-            style={{ background: accent.bg, color: accent.fg }}
-          >
-            {agent.initial}
-          </span>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold">{agent.name}</span>
-            <span className="text-[13px] text-muted">
-              {agent.role} · {scopeLine}
-            </span>
+      {/* Metrics panel — one card, or two side by side in compare mode */}
+      {compare ? (
+        <div className="flex flex-col gap-3">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <MetricCard agent={agent} m={m} scopeLine={scopeLine} other={mB} />
+            <MetricCard
+              agent={agentB}
+              m={mB}
+              scopeLine={scopeLineB}
+              other={m}
+            />
           </div>
-          <span className="ml-auto">
-            <StatusPill status={agent.status} />
-          </span>
+          <p className="text-center text-[13px] text-muted">{compareSummary}</p>
         </div>
-
-        {/* Headline numbers */}
-        <div className="grid grid-cols-3 gap-3">
-          {tiles.map((t) => (
-            <div
-              key={t.label}
-              className="flex flex-col gap-1 rounded-xl bg-hover p-3"
-            >
-              <span className="text-[22px] font-semibold leading-none tracking-[-0.02em]">
-                {t.value.toLocaleString()}
-              </span>
-              <span className="text-xs text-muted">{t.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Rates */}
-        <div className="flex flex-col gap-3.5">
-          <Metric
-            label="Qualified rate"
-            value={pct(m.real, m.calls)}
-            color="var(--color-good)"
-          />
-          <Metric
-            label="Spam filtered"
-            value={pct(m.spam, m.calls)}
-            color="var(--color-bad-bar)"
-          />
-          <Metric
-            label="Conversion rate"
-            value={pct(m.converted, m.real)}
-            color="var(--color-brand)"
-          />
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-hairline pt-3.5 text-sm">
-          <span className="text-muted">Avg call length</span>
-          <span className="font-mono font-medium">{m.avgLen}</span>
-        </div>
-      </section>
+      ) : (
+        <MetricCard agent={agent} m={m} scopeLine={scopeLine} />
+      )}
 
       {/* All-agents overview */}
       <div className="flex flex-col gap-5">

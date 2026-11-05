@@ -225,7 +225,7 @@ export function OverviewClient() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-brand-bar-soft" />
-                Spam / unclear
+                Unclear / no engagement
               </span>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function OverviewClient() {
                     <span className="h-2 w-2 rounded-sm bg-brand" />
                     {d.real} real
                     <span className="ml-1 h-2 w-2 rounded-sm bg-brand-bar-soft" />
-                    {d.other} spam/unclear
+                    {d.other} unclear / no engagement
                   </div>
                 </div>
                 <div className="text-center font-mono text-[11px] text-muted">

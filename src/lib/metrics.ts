@@ -180,7 +180,7 @@ export function emptyMetrics(): DashboardMetrics {
     kpis: [
       kpi("inbound", "Inbound calls", "0", "vs previous period"),
       kpi("real", "Qualified leads", "0", "0% of all calls"),
-      kpi("spam", "Spam or junk", "0", "Filtered before your team"),
+      kpi("spam", "No engagement", "0", "Silent or dropped calls"),
       kpi("minplus", "Calls ≥ 1 min", "0", "0% of calls"),
       kpi("avg", "Avg call length", "0m 00s", "Qualified only: 0m 00s"),
     ],
@@ -192,7 +192,7 @@ export function emptyMetrics(): DashboardMetrics {
     quality: [
       { label: "Qualified", count: 0, pct: 0, color: "var(--color-good)" },
       { label: "Unclear", count: 0, pct: 0, color: "var(--color-warn-bar)" },
-      { label: "Spam", count: 0, pct: 0, color: "var(--color-bad-bar)" },
+      { label: "No engagement", count: 0, pct: 0, color: "var(--color-bad-bar)" },
     ],
     chart: [],
     chartTitle: "Calls per day",
@@ -252,10 +252,10 @@ export function computeMetrics(
     },
     {
       id: "spam",
-      label: "Spam or junk",
+      label: "No engagement",
       value: spam.toLocaleString(),
       trend: trend(spam, byStatus(prev, "Spam"), true),
-      sub: "Filtered before your team",
+      sub: "Silent or dropped calls",
       spark: spark(cur.filter((l) => l.status === "Spam"), start, span),
     },
     {
@@ -301,7 +301,7 @@ export function computeMetrics(
   const quality: QualitySlice[] = [
     q("Qualified", real, "var(--color-good)"),
     q("Unclear", unclear, "var(--color-warn-bar)"),
-    q("Spam", spam, "var(--color-bad-bar)"),
+    q("No engagement", spam, "var(--color-bad-bar)"),
   ];
 
   const { specs, title } = bucketLayout(start, end);

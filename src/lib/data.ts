@@ -9,7 +9,7 @@ export type Status = "Real" | "Unclear" | "Spam";
 export const statusLabel: Record<Status, string> = {
   Real: "Qualified",
   Unclear: "Unclear",
-  Spam: "Spam",
+  Spam: "No engagement",
 };
 
 // Colors reference CSS tokens (var(--…)) so they flip in dark mode.

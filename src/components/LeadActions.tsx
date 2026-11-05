@@ -14,7 +14,7 @@ export function LeadActions({ id }: { id: string }) {
   const markSpam = () => {
     const prev = lead.stage;
     setStage(id, "Lost");
-    toast(`${lead.name} marked as spam`, {
+    toast(`${lead.name} marked as no engagement`, {
       variant: "info",
       action: { label: "Undo", onClick: () => setStage(id, prev) },
     });
@@ -46,7 +46,7 @@ export function LeadActions({ id }: { id: string }) {
   return (
     <>
       <Button variant="danger" size="lg" onClick={markSpam}>
-        Mark as spam
+        No engagement
       </Button>
       <Button size="lg" onClick={assign}>
         Assign
