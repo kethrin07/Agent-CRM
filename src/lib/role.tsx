@@ -23,20 +23,31 @@ type RoleStore = {
 
 const RoleContext = createContext<RoleStore | null>(null);
 
+// Read the persisted role synchronously. Returns nulls during SSR (no
+// localStorage), but on the client it runs during the first render — so the
+// role is correct on first paint instead of flashing a default, then correcting.
+function readStored(): { role: Role | null; clientId: string | null } {
+  if (typeof window === "undefined") return { role: null, clientId: null };
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return {
+      role: saved === "admin" || saved === "client" ? saved : null,
+      clientId: localStorage.getItem(CLIENT_KEY) || null,
+    };
+  } catch {
+    return { role: null, clientId: null };
+  }
+}
+
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<Role | null>(null);
-  const [clientId, setClientId] = useState<string | null>(null);
+  const [role, setRoleState] = useState<Role | null>(() => readStored().role);
+  const [clientId, setClientId] = useState<string | null>(
+    () => readStored().clientId,
+  );
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "admin" || saved === "client") setRoleState(saved);
-      const savedClient = localStorage.getItem(CLIENT_KEY);
-      if (savedClient) setClientId(savedClient);
-    } catch {}
-    setHydrated(true);
-  }, []);
+  // Mark hydrated after mount so SSR-dependent guards (RequireRole) settle.
+  useEffect(() => setHydrated(true), []);
 
   const setRole = useCallback(
     (next: Role, nextClient: string | null = null) => {
