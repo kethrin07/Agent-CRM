@@ -186,7 +186,7 @@ function MetricCard({
         <Metric
           label="No engagement"
           value={spam}
-          color="var(--color-bad-bar)"
+          color="var(--color-neutral-dot)"
           delta={other ? spam - pct(other.spam, other.calls) : undefined}
           invert
         />

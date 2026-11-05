@@ -33,8 +33,37 @@ export function fmtDur(secs?: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+// ElevenLabs keys newer data-collection items under an auto-generated id
+// (e.g. "aitem_1001m6n…") with the real identifier in `.name`; older items are
+// keyed by the identifier directly. Resolve a field by identifier either way.
 // deno-lint-ignore no-explicit-any
-function deriveStatus(conv: any, analysis: any): "Real" | "Unclear" | "Spam" {
+function fieldByName(data: any, name: string): any {
+  if (data?.[name]) return data[name];
+  for (const v of Object.values(data ?? {})) {
+    // deno-lint-ignore no-explicit-any
+    if ((v as any)?.name === name) return v;
+  }
+  return undefined;
+}
+
+const isTrue = (v: unknown) =>
+  v === true || String(v).toLowerCase() === "true";
+
+// deno-lint-ignore no-explicit-any
+function deriveStatus(
+  conv: any,
+  analysis: any,
+): "Real" | "Unclear" | "NoEngagement" | "Spam" {
+  const data = analysis?.data_collection_results ?? {};
+
+  // Spam = an actual solicitor / robocall the agent flagged (someone selling TO
+  // us, a recorded message, etc.). This is content-based: the LLM sets the
+  // `is_soliciting` data-collection field. Checked first — a talkative robocall
+  // should land here, not in "no engagement".
+  if (isTrue(fieldByName(data, "is_soliciting")?.value)) {
+    return "Spam";
+  }
+
   // How much did the caller actually engage? Count caller turns with real speech.
   const userTurns = (conv?.transcript ?? []).filter(
     // deno-lint-ignore no-explicit-any
@@ -42,17 +71,18 @@ function deriveStatus(conv: any, analysis: any): "Real" | "Unclear" | "Spam" {
   ).length;
   const duration = conv?.metadata?.call_duration_secs ?? 0;
 
-  // Spam = no real engagement: silence, robocall, or an immediate hangup with
-  // nothing said. A real person who talked is never spam — even if they hung up
-  // early before finishing.
-  if (userTurns === 0) return "Spam";
-  if (userTurns <= 1 && duration > 0 && duration < 8) return "Spam";
+  // No engagement = the caller never really spoke: silence or an immediate
+  // hangup with nothing said. Not spam — they may just have been unable to talk.
+  if (userTurns === 0) return "NoEngagement";
+  if (userTurns <= 1 && duration > 0 && duration < 8) return "NoEngagement";
 
   // Real = the caller explicitly consented to be contacted — the strongest
-  // signal of a genuine, actionable lead.
-  const data = analysis?.data_collection_results ?? {};
-  const consent = data?.consent_to_contact?.value;
-  if (consent === true || String(consent).toLowerCase() === "true") {
+  // signal of a genuine, actionable lead. (Agents name this field differently:
+  // Nora uses `consent_to_contact`, Bob/Alex use `consent_given`.)
+  const consent =
+    fieldByName(data, "consent_to_contact")?.value ??
+    fieldByName(data, "consent_given")?.value;
+  if (isTrue(consent)) {
     return "Real";
   }
 
@@ -81,9 +111,10 @@ export function mapConversationToRow(conv: any, cfg: MapConfig) {
   const data = analysis?.data_collection_results ?? {};
 
   // Return the first non-empty data-collection value among the given keys.
+  // Uses fieldByName so it resolves both directly-keyed and `aitem_…`-keyed items.
   const firstVal = (keys: string[]): string | undefined => {
     for (const k of keys) {
-      const v = data?.[k]?.value;
+      const v = fieldByName(data, k)?.value;
       if (v != null && String(v).trim() !== "") return String(v);
     }
     return undefined;

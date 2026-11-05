@@ -2,14 +2,16 @@
 // A voice-AI CRM: agents Nora & Bob answer inbound home-insurance calls
 // (ElevenLabs + Twilio), leads land in Supabase.
 
-export type Status = "Real" | "Unclear" | "Spam";
+export type Status = "Real" | "Unclear" | "NoEngagement" | "Spam";
 
-// Display labels for statuses. The stored value stays "Real" (don't break data /
-// filters), but it's shown as "Qualified" — a lead that didn't finish isn't fake.
+// Display labels for statuses. Stored values stay stable (don't break data /
+// filters). "Real" shows as "Qualified"; "NoEngagement" = silent/dropped calls;
+// "Spam" = an actual solicitor/robocall the agent flagged.
 export const statusLabel: Record<Status, string> = {
   Real: "Qualified",
   Unclear: "Unclear",
-  Spam: "No engagement",
+  NoEngagement: "No engagement",
+  Spam: "Spam",
 };
 
 // Colors reference CSS tokens (var(--…)) so they flip in dark mode.
@@ -26,6 +28,11 @@ export const statusStyle: Record<
     bg: "var(--color-warn-bg)",
     fg: "var(--color-warn-fg)",
     bar: "var(--color-warn-bar)",
+  },
+  NoEngagement: {
+    bg: "var(--color-neutral-bg)",
+    fg: "var(--color-neutral-fg)",
+    bar: "var(--color-neutral-dot)",
   },
   Spam: {
     bg: "var(--color-bad-bg)",

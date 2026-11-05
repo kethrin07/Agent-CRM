@@ -62,7 +62,7 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
 
-const STATUSES: Status[] = ["Real", "Unclear", "Spam"];
+const STATUSES: Status[] = ["Real", "Unclear", "NoEngagement", "Spam"];
 const STAGES: Stage[] = ["New", "Contacted", "Quoted", "Won", "Lost"];
 
 const norm = (s: string) => s.trim().toLowerCase();

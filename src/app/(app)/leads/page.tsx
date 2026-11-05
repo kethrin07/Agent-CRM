@@ -29,7 +29,7 @@ type AgentFilter = "All agents" | "Nora" | "Bob" | "Alex";
 type SourceFilter = "All" | "AI calls" | "Imported";
 type LengthFilter = "Any length" | "1 min+" | "Under 1 min";
 
-const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "Spam"];
+const statusFilters: StatusFilter[] = ["All", "Real", "Unclear", "NoEngagement", "Spam"];
 const agentFilters: AgentFilter[] = ["All agents", "Nora", "Bob", "Alex"];
 const sourceFilters: SourceFilter[] = ["All", "AI calls", "Imported"];
 const lengthFilters: LengthFilter[] = ["Any length", "1 min+", "Under 1 min"];
@@ -264,7 +264,7 @@ export default function LeadsPage() {
             Leads &amp; calls
           </h1>
           <div className="text-sm text-muted">
-            Every inbound call Nora and Bob answered, synced from ElevenLabs into
+            Every inbound call your AI agents answered, synced from ElevenLabs into
             Supabase
           </div>
         </div>

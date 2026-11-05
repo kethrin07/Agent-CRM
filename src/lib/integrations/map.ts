@@ -29,14 +29,16 @@ function toScore(raw?: number): number {
 }
 
 /**
- * Map ElevenLabs evaluation results → the app's Real / Unclear / Spam label.
- * Heuristic: a failed/very-short call reads as Spam; all criteria passing reads
- * as Real; anything mixed is Unclear. Tune to match your criteria config.
+ * Map ElevenLabs evaluation results → the app's status label.
+ * Heuristic: a failed/very-short call reads as "no engagement"; all criteria
+ * passing reads as Real; anything mixed is Unclear. Tune to match your config.
+ * (Actual spam/solicitor detection lives in the Edge-function mapper, which
+ * reads the agent's `is_soliciting` flag.)
  */
 function deriveStatus(conv: Conversation): Status {
   const a = conv.analysis;
   const score = toScore(a?.call_success_score);
-  if (!a || a.call_successful === "failure" || score < 15) return "Spam";
+  if (!a || a.call_successful === "failure" || score < 15) return "NoEngagement";
 
   const results = Object.values(a.evaluation_criteria_results ?? {});
   if (results.length > 0 && results.every((r) => r.result === "success")) {

@@ -92,7 +92,7 @@ export function OverviewClient() {
         <div className="flex flex-col gap-1">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em]">Dashboard</h1>
           <div className="text-sm text-muted">
-            How Nora and Bob handled inbound calls {rangeLabel}
+            How your AI agents handled inbound calls {rangeLabel}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -225,7 +225,7 @@ export function OverviewClient() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-sm bg-brand-bar-soft" />
-                Unclear / no engagement
+                Not qualified
               </span>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function OverviewClient() {
                     <span className="h-2 w-2 rounded-sm bg-brand" />
                     {d.real} real
                     <span className="ml-1 h-2 w-2 rounded-sm bg-brand-bar-soft" />
-                    {d.other} unclear / no engagement
+                    {d.other} not qualified
                   </div>
                 </div>
                 <div className="text-center font-mono text-[11px] text-muted">

@@ -20,7 +20,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Milvado55",
   description:
-    "How Nora and Bob handle inbound home-insurance calls — leads, transcripts and agent settings.",
+    "How your AI voice agents handle inbound home-improvement calls — leads, transcripts and agent settings.",
 };
 
 const themeInit = `

@@ -192,7 +192,8 @@ export function emptyMetrics(): DashboardMetrics {
     quality: [
       { label: "Qualified", count: 0, pct: 0, color: "var(--color-good)" },
       { label: "Unclear", count: 0, pct: 0, color: "var(--color-warn-bar)" },
-      { label: "No engagement", count: 0, pct: 0, color: "var(--color-bad-bar)" },
+      { label: "No engagement", count: 0, pct: 0, color: "var(--color-neutral-dot)" },
+      { label: "Spam", count: 0, pct: 0, color: "var(--color-bad-bar)" },
     ],
     chart: [],
     chartTitle: "Calls per day",
@@ -215,6 +216,7 @@ export function computeMetrics(
   const inbound = cur.length;
   const real = byStatus(cur, "Real");
   const unclear = byStatus(cur, "Unclear");
+  const noEng = byStatus(cur, "NoEngagement");
   const spam = byStatus(cur, "Spam");
   const avgSec = cur.length
     ? cur.reduce((a, l) => a + durSecs(l), 0) / cur.length
@@ -253,10 +255,10 @@ export function computeMetrics(
     {
       id: "spam",
       label: "No engagement",
-      value: spam.toLocaleString(),
-      trend: trend(spam, byStatus(prev, "Spam"), true),
+      value: noEng.toLocaleString(),
+      trend: trend(noEng, byStatus(prev, "NoEngagement"), true),
       sub: "Silent or dropped calls",
-      spark: spark(cur.filter((l) => l.status === "Spam"), start, span),
+      spark: spark(cur.filter((l) => l.status === "NoEngagement"), start, span),
     },
     {
       id: "minplus",
@@ -301,7 +303,8 @@ export function computeMetrics(
   const quality: QualitySlice[] = [
     q("Qualified", real, "var(--color-good)"),
     q("Unclear", unclear, "var(--color-warn-bar)"),
-    q("No engagement", spam, "var(--color-bad-bar)"),
+    q("No engagement", noEng, "var(--color-neutral-dot)"),
+    q("Spam", spam, "var(--color-bad-bar)"),
   ];
 
   const { specs, title } = bucketLayout(start, end);
@@ -330,7 +333,8 @@ export function agentMetricsFromLeads(
   return {
     calls,
     real: ls.filter((l) => l.status === "Real").length,
-    spam: ls.filter((l) => l.status === "Spam").length,
+    // AgentMetrics.spam feeds the agents page "No engagement" bar.
+    spam: ls.filter((l) => l.status === "NoEngagement").length,
     converted: ls.filter((l) => l.stage === "Won").length,
     avgLen: `${m}:${String(s).padStart(2, "0")}`,
   };
