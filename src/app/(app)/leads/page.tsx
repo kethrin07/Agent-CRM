@@ -73,6 +73,36 @@ const durToSec = (d: string) => {
 const defaultDir = (k: SortKey): "asc" | "desc" =>
   k === "score" || k === "dur" || k === "when" ? "desc" : "asc";
 
+// Sortable column header. Declared at module scope (not inside the page
+// component) so it isn't recreated every render.
+function SortHeader({
+  label,
+  k,
+  sort,
+  onToggle,
+}: {
+  label: string;
+  k: SortKey;
+  sort: Sort;
+  onToggle: (k: SortKey) => void;
+}) {
+  const active = sort.key === k;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(k)}
+      className={`flex items-center gap-1 text-left uppercase transition-colors hover:text-ink ${
+        active ? "text-ink" : ""
+      }`}
+    >
+      {label}
+      <span className="text-[10px]">
+        {active ? (sort.dir === "asc" ? "↑" : "↓") : ""}
+      </span>
+    </button>
+  );
+}
+
 export default function LeadsPage() {
   const { leads } = useLeads();
   const toast = useToast();
@@ -234,25 +264,6 @@ export default function LeadsPage() {
     setFrom("");
     setTo("");
     setQuery("");
-  };
-
-  const SortHeader = ({ label, k }: { label: string; k: SortKey }) => {
-    const active = sort.key === k;
-    return (
-      <button
-        type="button"
-        onClick={() => toggleSort(k)}
-        aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
-        className={`flex items-center gap-1 text-left uppercase transition-colors hover:text-ink ${
-          active ? "text-ink" : ""
-        }`}
-      >
-        {label}
-        <span className="text-[10px]">
-          {active ? (sort.dir === "asc" ? "↑" : "↓") : ""}
-        </span>
-      </button>
-    );
   };
 
   return (
@@ -433,12 +444,12 @@ export default function LeadsPage() {
               className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted"
               style={{ gridTemplateColumns: cols }}
             >
-              <SortHeader label="Lead" k="name" />
-              <SortHeader label="Status" k="status" />
+              <SortHeader label="Lead" k="name" sort={sort} onToggle={toggleSort} />
+              <SortHeader label="Status" k="status" sort={sort} onToggle={toggleSort} />
               <span>What they want</span>
-              <SortHeader label="Length" k="dur" />
-              <SortHeader label="Agent" k="agent" />
-              <SortHeader label="Date" k="when" />
+              <SortHeader label="Length" k="dur" sort={sort} onToggle={toggleSort} />
+              <SortHeader label="Agent" k="agent" sort={sort} onToggle={toggleSort} />
+              <SortHeader label="Date" k="when" sort={sort} onToggle={toggleSort} />
             </div>
 
             {paged.map((r) => {

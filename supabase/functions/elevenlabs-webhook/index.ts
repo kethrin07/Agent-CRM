@@ -21,7 +21,7 @@ try {
 } catch {
   AGENT_CLIENT_MAP = {};
 }
-// Optional JSON map of agent_id → display name (Nora/Bob/Vera/…).
+// Optional JSON map of agent_id → display name (Nora/Bob/Alex/…).
 let AGENT_NAME_MAP: Record<string, string> = {};
 try {
   AGENT_NAME_MAP = JSON.parse(Deno.env.get("AGENT_NAME_MAP") ?? "{}");

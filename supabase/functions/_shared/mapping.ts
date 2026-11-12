@@ -5,7 +5,7 @@
 export type MapConfig = {
   agentIdNora?: string;
   agentIdBob?: string;
-  agentNameMap?: Record<string, string>; // agent_id → display name (Nora/Bob/Vera/…)
+  agentNameMap?: Record<string, string>; // agent_id → display name (Nora/Bob/Alex/…)
   defaultClientId?: string | null;
   agentClientMap?: Record<string, string>; // agent_id → clientId (per-client tagging)
   spreadClientIds?: string[]; // shared agent → distribute calls across these clients
@@ -146,7 +146,12 @@ export function mapConversationToRow(conv: any, cfg: MapConfig) {
     intent:
       analysis?.call_summary_title ??
       analysis?.transcript_summary ??
-      firstVal(["project_description", "project_type"]) ??
+      firstVal([
+        "project_summary",
+        "project_description",
+        "project_type",
+        "trade",
+      ]) ??
       "",
     dur: fmtDur(metadata?.call_duration_secs),
     agent: agentName(conv?.agent_id, cfg),
