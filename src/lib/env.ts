@@ -29,6 +29,16 @@ export const env = {
   // Twilio
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID,
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
+
+  // Shared demo login (server-only — NEVER prefix with NEXT_PUBLIC_).
+  // A fixed admin account + a fixed client account for the testing phase.
+  loginAdminEmail: process.env.LOGIN_ADMIN_EMAIL,
+  loginAdminPassword: process.env.LOGIN_ADMIN_PASSWORD,
+  loginClientEmail: process.env.LOGIN_CLIENT_EMAIL,
+  loginClientPassword: process.env.LOGIN_CLIENT_PASSWORD,
+  // Which client the demo client account is scoped to (id from `clients` in
+  // src/lib/data.ts — e.g. "acme" / "bluebird"). Defaults to "acme".
+  loginClientId: process.env.LOGIN_CLIENT_ID || "acme",
 } as const;
 
 // agent_id → display name (same JSON as the Edge function's AGENT_NAME_MAP).
@@ -41,7 +51,7 @@ export const agentNameMap: Record<string, string> = (() => {
   }
 })();
 
-export type Service = "elevenlabs" | "supabase" | "twilio";
+export type Service = "elevenlabs" | "supabase" | "twilio" | "demoAuth";
 
 /** True when the minimum env for a service is present. */
 export function isConfigured(service: Service): boolean {
@@ -52,6 +62,13 @@ export function isConfigured(service: Service): boolean {
       return Boolean(env.supabaseUrl && env.supabaseServiceRoleKey);
     case "twilio":
       return Boolean(env.twilioAccountSid && env.twilioAuthToken);
+    case "demoAuth":
+      return Boolean(
+        env.loginAdminEmail &&
+          env.loginAdminPassword &&
+          env.loginClientEmail &&
+          env.loginClientPassword,
+      );
   }
 }
 

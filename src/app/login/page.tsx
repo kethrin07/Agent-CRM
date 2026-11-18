@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
 
   const notConnected = () =>
@@ -21,6 +22,35 @@ export default function LoginPage() {
   const choose = (role: Role, cid?: string) => {
     setRole(role, cid ?? null);
     router.push("/");
+  };
+
+  // Shared demo login: credentials are verified server-side (env vars), so the
+  // password never ships in the browser bundle. On success we apply the role.
+  const signIn = async () => {
+    if (submitting) return;
+    setNotice("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/demo-login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.role === "admin" || data.role === "client")) {
+        choose(data.role as Role, data.clientId);
+        return;
+      }
+      setNotice(
+        res.status === 501
+          ? "Sign-in isn’t set up yet — use Preview access below."
+          : (data.error ?? "Invalid email or password"),
+      );
+    } catch {
+      setNotice("Couldn’t sign in — check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -54,7 +84,7 @@ export default function LoginPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            notConnected();
+            signIn();
           }}
           className="flex flex-col gap-3"
         >
@@ -90,9 +120,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="min-h-11 rounded-lg bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+            disabled={submitting}
+            className="min-h-11 rounded-lg bg-brand text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign in
+            {submitting ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
