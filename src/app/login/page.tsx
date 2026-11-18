@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/nav";
-import { GoogleIcon } from "@/components/icons";
+import { EyeIcon, EyeOffIcon, GoogleIcon } from "@/components/icons";
 import { useRole, type Role } from "@/lib/role";
 import { clients } from "@/lib/data";
 
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const { setRole } = useRole();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [notice, setNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [clientId, setClientId] = useState(clients[0]?.id ?? "");
@@ -109,13 +110,24 @@ export default function LoginPage() {
                 Forgot?
               </button>
             </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="min-h-11 rounded-lg border border-border-strong bg-card px-3 text-sm font-normal text-ink outline-none focus:border-brand"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="min-h-11 w-full rounded-lg border border-border-strong bg-card pl-3 pr-11 text-sm font-normal text-ink outline-none focus:border-brand"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-1.5 my-auto flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-ink"
+              >
+                {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+              </button>
+            </div>
           </label>
 
           <button
