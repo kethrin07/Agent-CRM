@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ConnectionsPanel, Logo, NavLinks } from "./nav";
 import { SidebarSearchButton } from "./SidebarSearchButton";
 import { AccountPanel } from "./AccountPanel";
@@ -9,9 +10,14 @@ import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "./icons";
 import { useSidebar } from "@/lib/sidebar";
 
 export default function Sidebar() {
-  const { collapsed, mounted, toggle } = useSidebar();
-  // Expanded on the server and first client render (mounted === false), so SSR
-  // and hydration match; the stored "collapsed" preference applies after mount.
+  const { collapsed, toggle } = useSidebar();
+  // Local mounted flag (not from the provider): guaranteed false during THIS
+  // component's own hydration render, so its first render is always expanded and
+  // matches the server-streamed HTML — even though the Sidebar sits inside a
+  // Suspense boundary and hydrates after the provider's effect has run. The
+  // stored "collapsed" preference then applies on the next render.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const isCollapsed = mounted && collapsed;
 
   // Collapsed: a slim icon rail in the layout flow (no overlap with page

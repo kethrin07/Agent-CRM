@@ -10,15 +10,16 @@ import {
 
 /**
  * Desktop sidebar collapse state. Persisted in localStorage so the choice
- * sticks across reloads. `mounted` gates the collapsed effect until after
- * hydration, so SSR (always expanded) and the first client render match.
+ * sticks across reloads. The consumer (Sidebar) gates rendering behind its own
+ * local "mounted" flag so SSR (always expanded) and the first client render
+ * match — important because the Sidebar sits inside a Suspense boundary and
+ * hydrates later than this provider.
  */
 
 const STORAGE_KEY = "mhq-sidebar-collapsed";
 
 type SidebarStore = {
   collapsed: boolean; // user's stored preference
-  mounted: boolean; // false until after hydration
   toggle: () => void;
 };
 
@@ -26,13 +27,11 @@ const SidebarContext = createContext<SidebarStore | null>(null);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
       setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
     } catch {}
-    setMounted(true);
   }, []);
 
   const toggle = useCallback(() => {
@@ -46,7 +45,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SidebarContext.Provider value={{ collapsed, mounted, toggle }}>
+    <SidebarContext.Provider value={{ collapsed, toggle }}>
       {children}
     </SidebarContext.Provider>
   );
