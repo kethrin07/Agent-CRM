@@ -131,7 +131,13 @@ export function Logo() {
   );
 }
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function NavLinks({
+  onNavigate,
+  iconOnly = false,
+}: {
+  onNavigate?: () => void;
+  iconOnly?: boolean;
+}) {
   const pathname = usePathname();
   const { role } = useRole();
   // Local mounted flag (not the shared RoleProvider one): guaranteed false
@@ -155,14 +161,20 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-2.5 rounded-lg p-3 text-sm no-underline transition-colors ${
+            aria-label={iconOnly ? label : undefined}
+            title={iconOnly ? label : undefined}
+            className={`flex items-center rounded-lg no-underline transition-colors ${
+              iconOnly
+                ? "h-10 w-10 justify-center"
+                : "gap-2.5 p-3 text-sm"
+            } ${
               active
                 ? "bg-brand-soft font-semibold text-brand hover:text-brand"
                 : "text-sub hover:bg-page hover:text-sub"
             }`}
           >
             <Icon />
-            {label}
+            {!iconOnly && label}
           </Link>
         );
       })}

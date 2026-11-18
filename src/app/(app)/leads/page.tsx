@@ -116,7 +116,15 @@ export default function LeadsPage() {
   const isAdmin = mounted && role === "admin";
   const [importOpen, setImportOpen] = useState(false);
 
-  const cols = "minmax(190px,2fr) 110px minmax(180px,2fr) 70px 100px 140px";
+  // Progressive table columns: 4 (Lead · Status · Agent · Date) from `sm` up,
+  // full 6 (adds What-they-want + Length) from `lg` up. Below `sm` the card
+  // layout takes over. The What-they-want and Length cells are hidden below `lg`
+  // so the visible cells always match the active column count. Uses only default
+  // breakpoints (sm→lg) so Tailwind emits them in the correct cascade order —
+  // a custom breakpoint here can land out of order and get overridden.
+  const gridCols =
+    "sm:grid-cols-[minmax(160px,2fr)_104px_minmax(110px,1fr)_120px] " +
+    "lg:grid-cols-[minmax(190px,2fr)_110px_minmax(180px,2fr)_70px_110px_140px]";
 
   // Plain left-click opens the drawer; modifier/middle clicks deep-link as usual.
   const openDrawer = (e: MouseEvent<HTMLElement>, id: string) => {
@@ -438,16 +446,17 @@ export default function LeadsPage() {
       {/* Table */}
       <section className="card overflow-hidden">
         {/* Desktop table */}
-        <div className="hidden overflow-x-auto shell:block">
-          <div className="min-w-[960px]">
+        <div className="hidden overflow-x-auto sm:block">
+          <div className="min-w-full">
             <div
-              className="grid gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted"
-              style={{ gridTemplateColumns: cols }}
+              className={`grid ${gridCols} gap-4 border-b border-hairline bg-hover px-5 py-3 text-xs font-semibold uppercase tracking-[0.04em] text-muted`}
             >
               <SortHeader label="Lead" k="name" sort={sort} onToggle={toggleSort} />
               <SortHeader label="Status" k="status" sort={sort} onToggle={toggleSort} />
-              <span>What they want</span>
-              <SortHeader label="Length" k="dur" sort={sort} onToggle={toggleSort} />
+              <span className="hidden lg:block">What they want</span>
+              <div className="hidden lg:block">
+                <SortHeader label="Length" k="dur" sort={sort} onToggle={toggleSort} />
+              </div>
               <SortHeader label="Agent" k="agent" sort={sort} onToggle={toggleSort} />
               <SortHeader label="Date" k="when" sort={sort} onToggle={toggleSort} />
             </div>
@@ -459,8 +468,7 @@ export default function LeadsPage() {
                   key={r.id}
                   href={`/leads/${r.id}`}
                   onClick={(e) => openDrawer(e, r.id)}
-                  style={{ gridTemplateColumns: cols }}
-                  className="grid items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink"
+                  className={`grid ${gridCols} items-center gap-4 border-b border-row px-5 py-3.5 text-sm text-ink no-underline transition-colors last:border-b-0 hover:bg-hover hover:text-ink`}
                 >
                   <span className="flex flex-col gap-0.5">
                     <span className="font-semibold">{r.name}</span>
@@ -480,8 +488,10 @@ export default function LeadsPage() {
                     </span>
                   </span>
                   <StatusBadge status={r.status} />
-                  <span className="text-sub">{r.intent}</span>
-                  <span className="font-mono text-sub">{r.dur}</span>
+                  <span className="hidden text-sub lg:block">{r.intent}</span>
+                  <span className="hidden font-mono text-sub lg:block">
+                    {r.dur}
+                  </span>
                   <span className="flex items-center gap-2 text-sub">
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold"
@@ -498,8 +508,8 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        {/* Mobile cards */}
-        <div className="flex flex-col shell:hidden">
+        {/* Mobile cards (below the sm breakpoint only) */}
+        <div className="flex flex-col sm:hidden">
           {paged.map((r) => {
             const accent = agentAccent[r.agent];
             return (
@@ -512,7 +522,11 @@ export default function LeadsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="truncate font-semibold">{r.name}</span>
-                    <span className="font-mono text-xs text-muted">{r.phone}</span>
+                    {r.phone && (
+                      <span className="font-mono text-xs text-muted">
+                        {r.phone}
+                      </span>
+                    )}
                     <span className="mt-0.5 flex flex-wrap items-center gap-1">
                       <SourcePill lead={r} />
                       {isMinutePlus(r) && (
@@ -529,6 +543,9 @@ export default function LeadsPage() {
                   </div>
                   <div className="flex flex-shrink-0 flex-col items-end gap-1">
                     <StatusBadge status={r.status} />
+                    <span className="whitespace-nowrap text-[11px] text-muted">
+                      {r.when}
+                    </span>
                   </div>
                 </div>
 
@@ -548,7 +565,6 @@ export default function LeadsPage() {
                     ·
                   </span>
                   <span className="font-mono">{r.dur}</span>
-                  <span className="ml-auto whitespace-nowrap">{r.when}</span>
                 </div>
               </Link>
             );

@@ -7,6 +7,7 @@ import { LeadDrawerProvider } from "@/components/LeadDrawer";
 import { CommandPalette } from "@/components/CommandPalette";
 import { RequireRole } from "@/components/RequireRole";
 import { ToastProvider } from "@/components/ui/Toast";
+import { SidebarProvider } from "@/lib/sidebar";
 
 export default function AppLayout({
   children,
@@ -17,6 +18,7 @@ export default function AppLayout({
       <LeadsStoreProvider>
         <LiveCallsProvider>
         <LeadDrawerProvider>
+        <SidebarProvider>
         <CommandPalette />
         <div className="flex min-h-screen bg-page text-ink">
         <Suspense
@@ -33,6 +35,7 @@ export default function AppLayout({
           </main>
           </div>
         </div>
+        </SidebarProvider>
         </LeadDrawerProvider>
         </LiveCallsProvider>
       </LeadsStoreProvider>
